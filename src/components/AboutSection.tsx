@@ -12,10 +12,10 @@ const AboutSection: React.FC = () => {
           viewport={{ once: true }}
           className="text-center"
         >
-          <h2 className="text-4xl md:text-6xl font-display font-bold mb-8">
+          <h2 className="text-4xl md:text-6xl font-display font-extrabold mb-8" style={{ letterSpacing: '-0.02em' }}>
             About <span className="gradient-text">Me</span>
           </h2>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed font-body">
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed font-body" style={{ letterSpacing: '-0.01em' }}>
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor 
             incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud 
             exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.

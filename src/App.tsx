@@ -12,10 +12,10 @@ function App() {
     // Initialize smooth scrolling
     const lenis = initLenis()
     
-    // Hide splash screen after animation
+    // Hide splash screen after animation with cinematic delay
     const timer = setTimeout(() => {
       setShowSplash(false)
-    }, 4500) // Adjust timing based on splash animation duration
+    }, 9500) // Added 1.5s delay after final text for smoother transition
 
     return () => {
       clearTimeout(timer)

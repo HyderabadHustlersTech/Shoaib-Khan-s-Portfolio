@@ -15,18 +15,24 @@ html {
 }
 
 body {
-  font-family: 'Work Sans', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   background-color: #000000;
   color: #ffffff;
   overflow-x: hidden;
+  font-weight: 400;
+  letter-spacing: -0.01em;
 }
 
 .font-display {
-  font-family: 'Clash Display', sans-serif;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .font-accent {
-  font-family: 'Raleway', sans-serif;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 
 /* Glass effect utility */

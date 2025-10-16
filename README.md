@@ -19,9 +19,9 @@ A modern, premium personal portfolio website for **Shoaib Khan** — Content Cre
 
 - **Colors**: Black background (#000000), Golden Yellow primary (#FFBD59), White text (#FFFFFF)
 - **Typography**: 
-  - Clash Display (headings/hero)
-  - Work Sans (body text)
-  - Raleway (accents/subheadings)
+  - Syne (headings/hero/logo) - Bold, expressive, modern
+  - DM Sans (body text/navigation/buttons) - Clean, readable, professional
+  - Manrope (accents/subheadings/captions) - Sleek, balanced, futuristic
 - **Glass/blur effects** with subtle gradients
 - **Smooth animations** and cinematic aesthetic
 - **Responsive design** across all devices

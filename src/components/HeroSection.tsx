@@ -8,7 +8,7 @@ const HeroSection: React.FC = () => {
       name: 'Instagram',
       icon: Instagram,
       href: '#',
-      hoverClass: 'hover:bg-gradient-to-r hover:from-pink-500 hover:to-purple-600'
+      hoverClass: 'hover:bg-primary hover:text-black'
     },
     {
       name: 'LinkedIn', 
@@ -20,7 +20,7 @@ const HeroSection: React.FC = () => {
       name: 'YouTube',
       icon: Youtube, 
       href: '#',
-      hoverClass: 'hover:bg-red-600'
+      hoverClass: 'hover:bg-primary hover:text-black'
     }
   ]
 
@@ -74,7 +74,8 @@ const HeroSection: React.FC = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.7 }}
-              className="text-6xl md:text-8xl font-display font-bold mb-6"
+              className="text-6xl md:text-8xl font-display font-extrabold mb-6"
+              style={{ letterSpacing: '-0.03em' }}
             >
               <span className="gradient-text">Shoaib</span>
               <br />
@@ -85,7 +86,8 @@ const HeroSection: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.9 }}
-              className="text-xl md:text-2xl text-gray-300 mb-8 font-accent font-light leading-relaxed"
+              className="text-xl md:text-2xl text-gray-300 mb-8 font-accent font-medium leading-relaxed"
+              style={{ letterSpacing: '-0.01em' }}
             >
               Content Creator, Director, Video Editor & Entrepreneur
             </motion.p>
@@ -127,6 +129,7 @@ const HeroSection: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' })}
                 className="px-8 py-4 bg-primary text-black font-body font-semibold rounded-full hover:bg-yellow-400 transition-colors duration-300"
+                style={{ letterSpacing: '-0.01em' }}
               >
                 Get In Touch
               </motion.button>
@@ -136,6 +139,7 @@ const HeroSection: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' })}
                 className="px-8 py-4 border-2 border-primary text-primary font-body font-semibold rounded-full hover:bg-primary hover:text-black transition-all duration-300"
+                style={{ letterSpacing: '-0.01em' }}
               >
                 Learn More
               </motion.button>
@@ -151,10 +155,10 @@ const HeroSection: React.FC = () => {
           >
             <motion.div
               whileHover={{ 
-                scale: 1.05,
-                y: -10
+                scale: 1.02,
+                y: -5
               }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
               className="relative"
             >
               <div className="w-80 h-80 md:w-96 md:h-96 rounded-full overflow-hidden border-4 border-primary/30 shadow-2xl shadow-primary/20">
@@ -186,28 +190,7 @@ const HeroSection: React.FC = () => {
         </div>
       </div>
 
-      {/* Scroll Indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2 }}
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
-      >
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="text-primary cursor-pointer"
-          onClick={() => document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' })}
-        >
-          <div className="w-6 h-10 border-2 border-primary rounded-full flex justify-center">
-            <motion.div
-              animate={{ y: [0, 12, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="w-1 h-3 bg-primary rounded-full mt-2"
-            />
-          </div>
-        </motion.div>
-      </motion.div>
+
     </section>
   )
 }

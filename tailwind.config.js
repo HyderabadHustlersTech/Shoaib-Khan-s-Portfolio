@@ -12,9 +12,9 @@ export default {
         light: '#FFFFFF'
       },
       fontFamily: {
-        'display': ['Clash Display', 'sans-serif'],
-        'body': ['Work Sans', 'sans-serif'],
-        'accent': ['Raleway', 'sans-serif']
+        'display': ['Syne', 'sans-serif'],
+        'body': ['DM Sans', 'sans-serif'],
+        'accent': ['Manrope', 'sans-serif']
       },
       animation: {
         'fade-in': 'fadeIn 0.8s ease-in-out',
