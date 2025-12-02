@@ -1,20 +1,24 @@
 import Lenis from 'lenis'
 
-export const initLenis = () => {
-  const lenis = new Lenis({
-    duration: 1.2,
-    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    smoothWheel: true,
-    wheelMultiplier: 1,
-    touchMultiplier: 2,
-  })
+let lenisInstance: Lenis | null = null
+let rafId: number | null = null
 
-  function raf(time: number) {
-    lenis.raf(time)
-    requestAnimationFrame(raf)
+export const initLenis = (): Lenis | null => {
+  // Disabled Lenis for better performance - using native smooth scrolling instead
+  return null
+}
+
+export const getLenis = (): Lenis | null => {
+  return lenisInstance
+}
+
+export const destroyLenis = (): void => {
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+    rafId = null
   }
-
-  requestAnimationFrame(raf)
-
-  return lenis
+  if (lenisInstance) {
+    lenisInstance.destroy()
+    lenisInstance = null
+  }
 }

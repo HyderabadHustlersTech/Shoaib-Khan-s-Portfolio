@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import './styles/variables.scss';
-
 * {
   margin: 0;
   padding: 0;
@@ -11,7 +9,7 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: smooth; /* Native smooth scrolling */
 }
 
 body {
@@ -19,10 +17,39 @@ body {
   background-color: #000000;
   color: #ffffff;
   overflow-x: hidden;
+  overflow-y: auto;
   font-weight: 400;
   letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Better mobile scrolling */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
+}
+
+/* Prevent horizontal scroll on all elements */
+* {
+  max-width: 100%;
+}
+
+html,
+body,
+#root {
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Ensure images are responsive */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Prevent iframe overflow */
+iframe {
+  max-width: 100%;
 }
 
 /* Performance optimizations */
@@ -34,6 +61,84 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Global performance optimizations */
+* {
+  /* Reduce repaints */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Performance: Isolate rendering contexts */
+section {
+  contain: layout style paint;
+  isolation: isolate;
+}
+
+/* Optimize scrolling performance */
+html {
+  scroll-padding-top: 80px;
+}
+
+/* Reduce will-change overhead */
+[style*="will-change"] {
+  will-change: transform, opacity;
+}
+
+/* GPU acceleration for smooth animations */
+.gpu-accelerated,
+[style*="transform"] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Mobile performance optimizations */
+@media (max-width: 768px) {
+  /* Reduce blur effects on mobile for better performance */
+  [style*="backdrop-filter"],
+  .backdrop-blur-xl,
+  .backdrop-blur-sm {
+    backdrop-filter: blur(2px) !important;
+  }
+  
+  /* Reduce animation complexity on mobile */
+  [style*="will-change"] {
+    will-change: auto !important;
+  }
+  
+  /* Optimize GPU-accelerated properties */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  
+  /* Better touch targets */
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent text size adjustment on iOS */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  
+  /* Pause animations when not visible */
+  * {
+    animation-play-state: running;
+  }
+}
+
+/* Reduce blur effects globally for better performance */
+.backdrop-blur-xl {
+  backdrop-filter: blur(8px);
+}
+
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
 }
 
 .font-display {

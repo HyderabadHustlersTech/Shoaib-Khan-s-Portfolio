@@ -84,26 +84,42 @@ const FloatingOrb: React.FC<{ index: number }> = () => {
 const JourneySection: React.FC = () => {
   const sectionRef = useRef(null)
   const isInView = useInView(sectionRef, { once: false, amount: 0.1 })
-  const [particleCount, setParticleCount] = useState(50)
-  const [orbCount, setOrbCount] = useState(15)
+  const [particleCount, setParticleCount] = useState(40)
+  const [orbCount, setOrbCount] = useState(12)
 
   useEffect(() => {
     const updateCounts = () => {
-      if (window.innerWidth < 768) {
-        setParticleCount(25)
-        setOrbCount(8)
-      } else if (window.innerWidth < 1024) {
-        setParticleCount(35)
-        setOrbCount(12)
+      const width = window.innerWidth
+      // Reduced particle counts for better performance
+      if (width < 640) {
+        setParticleCount(15)
+        setOrbCount(5)
+      } else if (width < 768) {
+        setParticleCount(20)
+        setOrbCount(6)
+      } else if (width < 1024) {
+        setParticleCount(30)
+        setOrbCount(10)
       } else {
-        setParticleCount(50)
-        setOrbCount(15)
+        setParticleCount(40)
+        setOrbCount(12)
       }
     }
 
     updateCounts()
-    window.addEventListener('resize', updateCounts)
-    return () => window.removeEventListener('resize', updateCounts)
+    
+    // Throttled resize handler
+    let resizeTimer: ReturnType<typeof setTimeout>
+    const handleResize = () => {
+      clearTimeout(resizeTimer)
+      resizeTimer = setTimeout(updateCounts, 150)
+    }
+    
+    window.addEventListener('resize', handleResize, { passive: true })
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      clearTimeout(resizeTimer)
+    }
   }, [])
 
   const journeyEvents: JourneyEvent[] = [
@@ -168,7 +184,7 @@ const JourneySection: React.FC = () => {
     // 🎙️ Hyderabad Hustlers
     {
       date: 'Dec 21, 2023',
-      title: 'Birth of Hyderabad Hustlers',
+      title: 'Formation of Hyderabad Hustlers',
       description: 'Co-founded Hyderabad Hustlers with Sayeeda Jabri. Initially ran podcasts while still working with BioReform, then chose to fully dedicate himself to HH, leaving BioReform. Unlike other startups that go through long pre-incubation phases, HH received direct incubation at Edventure Park due to rapid traction and impact.'
     },
     // 🎭 Other Creative Milestones
@@ -190,6 +206,7 @@ const JourneySection: React.FC = () => {
       ref={sectionRef}
       id="journey" 
       className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black py-20 lg:py-32"
+      style={{ overflowX: 'hidden' }}
     >
       {/* Enhanced Floating Particles Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -201,26 +218,26 @@ const JourneySection: React.FC = () => {
         ))}
       </div>
 
-      {/* Ambient Background Orbs */}
+      {/* Ambient Background Orbs - Reduced blur for performance */}
       <motion.div
-        className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl"
-        style={{ background: 'radial-gradient(circle, rgba(254,189,89,0.08) 0%, transparent 70%)', willChange: 'transform' }}
-        animate={{
-          scale: [1, 1.3, 1],
-          x: [0, 50, 0],
-          y: [0, -30, 0],
-        }}
-        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full blur-2xl"
+        style={{ background: 'radial-gradient(circle, rgba(254,189,89,0.06) 0%, transparent 70%)' }}
+        animate={isInView ? {
+          scale: [1, 1.2, 1],
+          x: [0, 30, 0],
+          y: [0, -20, 0],
+        } : {}}
+        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute bottom-1/4 left-1/4 w-80 h-80 rounded-full blur-3xl"
-        style={{ background: 'radial-gradient(circle, rgba(254,189,89,0.06) 0%, transparent 70%)', willChange: 'transform' }}
-        animate={{
-          scale: [1, 1.4, 1],
-          x: [0, -40, 0],
-          y: [0, 40, 0],
-        }}
-        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute bottom-1/4 left-1/4 w-80 h-80 rounded-full blur-2xl"
+        style={{ background: 'radial-gradient(circle, rgba(254,189,89,0.04) 0%, transparent 70%)' }}
+        animate={isInView ? {
+          scale: [1, 1.3, 1],
+          x: [0, -30, 0],
+          y: [0, 30, 0],
+        } : {}}
+        transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
       />
 
       {/* Main Content */}
@@ -344,11 +361,13 @@ const JourneySection: React.FC = () => {
                         >
                           <div className="aspect-video">
                             <iframe
-                              src={`${event.videoUrl}?autoplay=1&mute=1&loop=1&playlist=${event.videoUrl.split('/').pop()}&controls=0&modestbranding=1&rel=0&enablejsapi=1`}
+                              src={`${event.videoUrl}?autoplay=1&mute=1&loop=1&playlist=${event.videoUrl.split('/').pop()}&controls=0&modestbranding=1&rel=0&enablejsapi=1&playsinline=1`}
                               title={event.title}
                               className="w-full h-full"
+                              loading="lazy"
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                               style={{ opacity: 0.7 }}
+                              allowFullScreen
                             />
                           </div>
                           <div 
@@ -377,11 +396,13 @@ const JourneySection: React.FC = () => {
                         >
                           <div className="aspect-video">
                             <iframe
-                              src={`${event.videoUrl}?autoplay=1&mute=1&loop=1&playlist=${event.videoUrl.split('/').pop()}&controls=0&modestbranding=1&rel=0&enablejsapi=1`}
+                              src={`${event.videoUrl}?autoplay=1&mute=1&loop=1&playlist=${event.videoUrl.split('/').pop()}&controls=0&modestbranding=1&rel=0&enablejsapi=1&playsinline=1`}
                               title={event.title}
                               className="w-full h-full"
+                              loading="lazy"
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                               style={{ opacity: 0.7 }}
+                              allowFullScreen
                             />
                           </div>
                           <div 
@@ -491,11 +512,13 @@ const JourneySection: React.FC = () => {
                         >
                           <div className="aspect-video">
                             <iframe
-                              src={`${event.videoUrl}?autoplay=1&mute=1&loop=1&playlist=${event.videoUrl.split('/').pop()}&controls=0&modestbranding=1&rel=0&enablejsapi=1`}
+                              src={`${event.videoUrl}?autoplay=1&mute=1&loop=1&playlist=${event.videoUrl.split('/').pop()}&controls=0&modestbranding=1&rel=0&enablejsapi=1&playsinline=1`}
                               title={event.title}
                               className="w-full h-full"
+                              loading="lazy"
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                               style={{ opacity: 0.7 }}
+                              allowFullScreen
                             />
                           </div>
                         </motion.div>
@@ -567,7 +590,7 @@ const JourneySection: React.FC = () => {
                 viewport={{ once: true }}
                 whileHover={{ scale: 1.05, borderColor: 'rgba(254, 189, 89, 0.5)' }}
               >
-                <div className="text-4xl sm:text-5xl font-display font-bold gradient-text mb-2">50+</div>
+                <div className="text-4xl sm:text-5xl font-display font-bold gradient-text mb-2">90+</div>
                 <div className="text-white/90 font-body text-sm sm:text-base">Entrepreneurs Covered</div>
               </motion.div>
 

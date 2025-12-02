@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
+import { getLenis } from '../utils/lenis'
 
 const Navbar: React.FC = () => {
   const [isAtTop, setIsAtTop] = useState(true)
@@ -8,47 +9,83 @@ const Navbar: React.FC = () => {
   const [activeSection, setActiveSection] = useState('hero')
 
   useEffect(() => {
+    let ticking = false
+    
     const handleScroll = () => {
-      const heroSection = document.getElementById('hero')
-      if (heroSection) {
-        const heroBottom = heroSection.offsetHeight
-        setIsAtTop(window.scrollY < heroBottom - 100)
-      }
+      if (ticking) return
+      
+      ticking = true
+      requestAnimationFrame(() => {
+        const scrollY = window.scrollY || window.pageYOffset || 0
+        
+        const heroSection = document.getElementById('hero')
+        if (heroSection) {
+          const heroBottom = heroSection.offsetHeight
+          setIsAtTop(scrollY < heroBottom - 100)
+        }
 
-      // Detect active section
-      const sections = ['hero', 'about', 'journey', 'experience', 'services', 'contact']
-      for (const section of sections) {
-        const element = document.getElementById(section)
-        if (element) {
-          const rect = element.getBoundingClientRect()
-          if (rect.top <= 150 && rect.bottom >= 150) {
-            setActiveSection(section)
-            break
+        // Detect active section with optimized threshold
+        const sections = ['hero', 'about', 'journey', 'experience', 'contact']
+        const viewportHeight = window.innerHeight
+        const threshold = viewportHeight * 0.25
+        
+        for (const section of sections) {
+          const element = document.getElementById(section)
+          if (element) {
+            const rect = element.getBoundingClientRect()
+            // More forgiving threshold for section detection
+            if (rect.top <= threshold && rect.bottom >= threshold * 0.5) {
+              setActiveSection(section)
+              break
+            }
           }
         }
-      }
+        
+        ticking = false
+      })
     }
 
-    window.addEventListener('scroll', handleScroll)
+    // Listen to scroll events - Lenis will trigger native scroll events
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    
+    // Also listen to Lenis scroll events if available
+    const lenis = getLenis()
+    const lenisScrollHandler = () => handleScroll()
+    
+    if (lenis) {
+      lenis.on('scroll', lenisScrollHandler)
+    }
+    
+    // Initial check
     handleScroll()
-    return () => window.removeEventListener('scroll', handleScroll)
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (lenis) {
+        lenis.off('scroll', lenisScrollHandler)
+      }
+    }
   }, [])
 
   const navItems = [
     { name: 'About', href: '#about' },
     { name: 'Journey', href: '#journey' },
     { name: 'Experience', href: '#experience' },
-    { name: 'Services', href: '#services' },
     { name: 'Contact', href: '#contact' }
   ]
 
-  const scrollToSection = (href: string) => {
+  const scrollToSection = useCallback((href: string) => {
     const element = document.querySelector(href)
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
+      setIsNavOpen(false)
+      
+      // Small delay to allow menu to close first
+      setTimeout(() => {
+        // Use native smooth scroll for better performance
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 100)
     }
-    setIsNavOpen(false)
-  }
+  }, [])
 
   return (
     <>
@@ -161,7 +198,7 @@ const Navbar: React.FC = () => {
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="absolute right-0 top-0 bottom-0 w-80 bg-black/95 backdrop-blur-xl shadow-2xl"
+                className="absolute right-0 top-0 bottom-0 w-[85vw] max-w-80 bg-black/95 backdrop-blur-sm shadow-2xl" // Reduced blur
                 style={{ borderLeft: '1px solid rgba(254, 189, 89, 0.3)', willChange: 'transform' }}
                 onClick={(e) => e.stopPropagation()}
               >

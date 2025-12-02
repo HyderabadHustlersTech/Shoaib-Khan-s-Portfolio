@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-type TextItem = string | { text: string; highlight: string }
+type TextItem = string | { text: string; highlight?: string; image?: string }
 
 const SplashScreen: React.FC = () => {
   const [currentText, setCurrentText] = useState(0)
@@ -10,7 +10,7 @@ const SplashScreen: React.FC = () => {
   const texts: TextItem[] = [
     "Content Creator",
     "Entrepreneur",
-    { text: "Co-Founder of ", highlight: "Hyderabad Hustlers" }
+    { text: "Co-Founder of ", image: "/assets/hhlogo.webp" }
   ]
 
   useEffect(() => {
@@ -67,8 +67,6 @@ const SplashScreen: React.FC = () => {
     }
   }
 
-
-
   return (
     <motion.div
       className="fixed inset-0 bg-black flex items-center justify-center z-50 overflow-hidden"
@@ -76,8 +74,6 @@ const SplashScreen: React.FC = () => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.8, ease: "easeInOut" }}
     >
-
-
       {/* Animated gradient orbs */}
       <motion.div
         className="absolute top-1/4 left-1/4 w-48 h-48 sm:w-72 sm:h-72 md:w-96 md:h-96 rounded-full opacity-20 blur-2xl md:blur-3xl"
@@ -208,21 +204,32 @@ const SplashScreen: React.FC = () => {
               {typeof texts[currentText] === 'string' ? (
                 texts[currentText] as string
               ) : (
-                <>
-                  {(texts[currentText] as { text: string; highlight: string }).text}
-                  <span
-                    className="block sm:inline"
-                    style={{
-                      color: '#FEBD59',
-                      fontFamily: "'Karla', sans-serif",
-                      fontWeight: '500',
-                      letterSpacing: '0.05em',
-                      fontStyle: 'italic'
-                    }}
-                  >
-                    {(texts[currentText] as { text: string; highlight: string }).highlight}
-                  </span>
-                </>
+                <span className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+                  <span>{(texts[currentText] as { text: string }).text}</span>
+                  {(texts[currentText] as { highlight?: string }).highlight && (
+                    <span
+                      className="block sm:inline"
+                      style={{
+                        color: '#FEBD59',
+                        fontFamily: "'Karla', sans-serif",
+                        fontWeight: '500',
+                        letterSpacing: '0.05em',
+                        fontStyle: 'italic'
+                      }}
+                    >
+                      {(texts[currentText] as { highlight: string }).highlight}
+                    </span>
+                  )}
+                  {(texts[currentText] as { image?: string }).image && (
+                    <img
+                      src={(texts[currentText] as { image: string }).image}
+                      alt="Hyderabad Hustlers Logo"
+                      className="h-32 sm:h-40 md:h-52 w-auto object-contain mt-4 sm:mt-0"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
+                </span>
               )}
             </motion.span>
           </motion.div>
@@ -279,8 +286,6 @@ const SplashScreen: React.FC = () => {
             </motion.div>
           ))}
         </div>
-
-
       </motion.div>
     </motion.div>
   )

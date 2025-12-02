@@ -14,7 +14,7 @@ const HeroSection: React.FC = () => {
   ]
 
   return (
-    <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
+    <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black" style={{ overflowX: 'hidden' }}>
       
       {/* Floating Creative Elements */}
       {creativeIcons.map(({ Icon, position, delay, size }, index) => (
@@ -46,26 +46,26 @@ const HeroSection: React.FC = () => {
         </motion.div>
       ))}
 
-      {/* Ambient Light Orbs */}
+      {/* Ambient Light Orbs - Reduced blur for performance */}
       <motion.div
-        className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl"
-        style={{ background: 'radial-gradient(circle, rgba(254,189,89,0.15) 0%, transparent 70%)', willChange: 'transform' }}
+        className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-2xl"
+        style={{ background: 'radial-gradient(circle, rgba(254,189,89,0.1) 0%, transparent 70%)' }}
         animate={{
-          scale: [1, 1.3, 1],
-          x: [0, 50, 0],
-          y: [0, -30, 0],
+          scale: [1, 1.2, 1],
+          x: [0, 30, 0],
+          y: [0, -20, 0],
         }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl"
-        style={{ background: 'radial-gradient(circle, rgba(255,157,0,0.12) 0%, transparent 70%)', willChange: 'transform' }}
+        className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-2xl"
+        style={{ background: 'radial-gradient(circle, rgba(255,157,0,0.08) 0%, transparent 70%)' }}
         animate={{
-          scale: [1, 1.4, 1],
-          x: [0, -40, 0],
-          y: [0, 40, 0],
+          scale: [1, 1.3, 1],
+          x: [0, -30, 0],
+          y: [0, 30, 0],
         }}
-        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
       />
 
       {/* Main Content */}
@@ -109,7 +109,8 @@ const HeroSection: React.FC = () => {
                 src="/assets/skpic.webp"
                 alt="Shoaib Khan"
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                loading="lazy"
+                loading="eager"
+                decoding="async"
               />
             </motion.div>
           </motion.div>
