@@ -102,39 +102,127 @@ html {
   .backdrop-blur-sm {
     backdrop-filter: blur(2px) !important;
   }
-  
+
   /* Reduce animation complexity on mobile */
   [style*="will-change"] {
     will-change: auto !important;
   }
-  
+
   /* Optimize GPU-accelerated properties */
   .gpu-accelerated {
     transform: translateZ(0);
     backface-visibility: hidden;
   }
-  
+
   /* Better touch targets */
   button, a {
     min-height: 44px;
     min-width: 44px;
   }
-  
+
   /* Prevent text size adjustment on iOS */
   html {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
-  
+
   /* Pause animations when not visible */
   * {
     animation-play-state: running;
   }
 }
 
+/* Very small screens - text sizing optimization */
+@media (max-width: 375px) {
+  /* Hero section name - reduce to 3xl on very small screens */
+  h1.text-4xl {
+    font-size: 1.875rem !important; /* 3xl equivalent */
+    line-height: 2.25rem !important;
+  }
+
+  /* About section heading */
+  h2.text-3xl {
+    font-size: 1.5rem !important; /* 2xl equivalent */
+    line-height: 2rem !important;
+  }
+
+  /* Contact section values - better overflow handling */
+  .break-words {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Reduce vertical spacing */
+  section {
+    padding-top: 3rem !important;
+    padding-bottom: 3rem !important;
+  }
+
+  /* Reduce hero section height */
+  #hero {
+    min-height: auto !important;
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  /* Make profile image smaller */
+  #hero img {
+    max-width: 10rem !important;
+    max-height: 10rem !important;
+  }
+}
+
 /* Reduce blur effects globally for better performance */
 .backdrop-blur-xl {
   backdrop-filter: blur(8px);
+}
+
+/* Keyboard navigation and focus indicators */
+/* Remove default outline and add custom focus styles */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid #FEBD59;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* Focus styles for interactive elements */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #FEBD59;
+  outline-offset: 4px;
+  box-shadow: 0 0 0 4px rgba(254, 189, 89, 0.2);
+}
+
+/* Focus within for containers */
+*:focus-within {
+  /* Allow nested focus to show */
+}
+
+/* Skip to main content link for screen readers */
+.skip-to-main {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+  padding: 1rem 1.5rem;
+  background-color: #FEBD59;
+  color: #000;
+  text-decoration: none;
+  border-radius: 0 0 0.5rem 0;
+  font-weight: bold;
+}
+
+.skip-to-main:focus {
+  left: 0;
+  top: 0;
 }
 
 .backdrop-blur-sm {

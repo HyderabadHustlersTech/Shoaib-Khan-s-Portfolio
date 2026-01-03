@@ -1,6 +1,7 @@
 import React, { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { Phone, Mail, Instagram } from 'lucide-react'
+import SectionHeader from './SectionHeader'
 
 const ContactSection: React.FC = () => {
   const sectionRef = useRef(null)
@@ -35,37 +36,7 @@ const ContactSection: React.FC = () => {
       style={{ overflowX: 'hidden' }}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Section Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 1, ease: [0.6, 0.05, 0.01, 0.9] }}
-          className="text-center mb-12 lg:mb-16"
-        >
-          <motion.h2
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display mb-4 leading-none tracking-tight"
-            style={{ fontWeight: 900 }}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={isInView ? { opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <span className="text-white">GET IN </span>
-            <span className="gradient-text">TOUCH</span>
-          </motion.h2>
-
-          {/* Glowing Divider Line */}
-          <motion.div
-            className="w-32 h-px mx-auto mt-6"
-            style={{
-              background: 'linear-gradient(90deg, transparent 0%, #FEBD59 50%, transparent 100%)',
-              boxShadow: '0 0 20px rgba(254, 189, 89, 0.5)',
-              willChange: 'transform'
-            }}
-            initial={{ scaleX: 0, opacity: 0 }}
-            animate={isInView ? { scaleX: 1, opacity: 1 } : {}}
-            transition={{ duration: 1, delay: 0.5 }}
-          />
-        </motion.div>
+        <SectionHeader title="GET IN" gradientText="TOUCH" isInView={isInView} className="mb-12 lg:mb-16" />
 
         {/* Contact Methods - Centered Stack Layout */}
         <div className="max-w-3xl mx-auto">

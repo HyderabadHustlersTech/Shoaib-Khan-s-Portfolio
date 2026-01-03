@@ -1,6 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Instagram, Linkedin, Camera, Film, Mic, Video, Clapperboard, Lightbulb } from 'lucide-react'
+import LazyImage from './LazyImage'
 
 const HeroSection: React.FC = () => {
 
@@ -105,7 +106,7 @@ const HeroSection: React.FC = () => {
               }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              <img
+              <LazyImage
                 src="/assets/skpic.webp"
                 alt="Shoaib Khan"
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"

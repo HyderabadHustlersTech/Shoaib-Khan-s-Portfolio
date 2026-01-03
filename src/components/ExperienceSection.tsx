@@ -1,6 +1,7 @@
 import React, { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { Briefcase } from 'lucide-react'
+import SectionHeader from './SectionHeader'
 
 interface Experience {
   company: string
@@ -55,41 +56,8 @@ const ExperienceSection: React.FC = () => {
       className="relative min-h-screen flex items-center justify-center py-20 lg:py-32 overflow-hidden bg-black"
       style={{ overflowX: 'hidden' }}
     >
-      {/* Dark Veil Effect - Disabled for performance */}
-      {/* <div className="absolute inset-0 w-full h-full pointer-events-none">
-        <DarkVeil hueShift={209} />
-      </div> */}
-
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Section Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 1, ease: [0.6, 0.05, 0.01, 0.9] }}
-          className="text-center mb-16 lg:mb-24"
-        >
-          <motion.h2
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display mb-4 leading-none tracking-tight"
-            style={{ fontWeight: 900 }}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={isInView ? { opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <span className="gradient-text">EXPERIENCES</span>
-          </motion.h2>
-
-          {/* Decorative Line */}
-          <motion.div
-            className="w-32 h-1 mx-auto mt-6"
-            style={{
-              background: 'linear-gradient(90deg, transparent 0%, #FEBD59 50%, transparent 100%)',
-              willChange: 'transform'
-            }}
-            initial={{ scaleX: 0, opacity: 0 }}
-            animate={isInView ? { scaleX: 1, opacity: 1 } : {}}
-            transition={{ duration: 1, delay: 0.5 }}
-          />
-        </motion.div>
+        <SectionHeader gradientText="EXPERIENCES" isInView={isInView} />
 
         {/* Experience Grid - Modern Layout */}
         <div className="max-w-7xl mx-auto">

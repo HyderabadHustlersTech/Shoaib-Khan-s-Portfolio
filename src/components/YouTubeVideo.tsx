@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Play } from 'lucide-react'
+import { getYouTubeVideoId, getYouTubeThumbnail, getYouTubeEmbedUrl } from '../utils/youtube'
 
 interface YouTubeVideoProps {
   videoUrl: string
@@ -11,17 +12,9 @@ interface YouTubeVideoProps {
 const YouTubeVideo: React.FC<YouTubeVideoProps> = ({ videoUrl, title, className = '' }) => {
   const [isPlaying, setIsPlaying] = useState(false)
 
-  // Extract video ID from URL
-  const getVideoId = (url: string): string => {
-    const match = url.match(/(?:youtube\.com\/embed\/|youtu\.be\/|youtube\.com\/watch\?v=)([^&\n?#]+)/)
-    return match ? match[1] : ''
-  }
-
-  const videoId = getVideoId(videoUrl)
-  const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
-
-  // Build the YouTube embed URL - autoplay only when user clicks play button
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?controls=1&modestbranding=1&rel=0&enablejsapi=1&autoplay=1`
+  const videoId = getYouTubeVideoId(videoUrl)
+  const thumbnailUrl = getYouTubeThumbnail(videoId)
+  const embedUrl = getYouTubeEmbedUrl(videoId, { autoplay: true })
 
   const handlePlay = () => {
     setIsPlaying(true)
@@ -52,7 +45,7 @@ const YouTubeVideo: React.FC<YouTubeVideoProps> = ({ videoUrl, title, className 
         onError={(e) => {
           // Fallback to a default thumbnail if YouTube thumbnail fails
           const target = e.target as HTMLImageElement
-          target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+          target.src = getYouTubeThumbnail(videoId, 'hqdefault')
         }}
       />
       

@@ -1,699 +1,414 @@
-import React, { useRef, useEffect, useState } from 'react'
-import { motion, useInView } from 'framer-motion'
-import { Calendar } from 'lucide-react'
+import React, { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Play, ChevronLeft, ChevronRight } from 'lucide-react'
+import { journeyData, type Milestone, type YearData } from '../data/journeyData'
+import YouTubeVideo from './YouTubeVideo'
 
-interface JourneyEvent {
-  date: string
-  title: string
-  description: string
-  videoUrl?: string
+// ============================================
+// PLACEHOLDER COMPONENT
+// ============================================
+
+const PlaceholderCard: React.FC<{ text: string }> = ({ text }) => (
+  <div
+    className="relative aspect-video rounded-2xl flex items-center justify-center"
+    style={{
+      background: 'linear-gradient(135deg, rgba(254, 189, 89, 0.08) 0%, rgba(254, 189, 89, 0.03) 100%)',
+      border: '2px dashed rgba(254, 189, 89, 0.3)',
+    }}
+  >
+    <div className="text-center p-4">
+      <div
+        className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center"
+        style={{ background: 'rgba(254, 189, 89, 0.15)' }}
+      >
+        <Play size={20} style={{ color: '#FEBD59' }} />
+      </div>
+      <p className="text-white/50 font-body text-sm">{text}</p>
+    </div>
+  </div>
+)
+
+// ============================================
+// MILESTONE RENDERER
+// ============================================
+
+const MilestoneRenderer: React.FC<{
+  milestone: Milestone
+  isReversed: boolean
+}> = ({ milestone, isReversed }) => {
+  // Side-by-side videos
+  if (milestone.type === 'side-by-side') {
+    return (
+      <div className="space-y-4">
+        <h4 className="text-lg sm:text-xl lg:text-2xl font-display font-bold text-white text-center mb-6">
+          {milestone.title}
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+          {milestone.leftVideoUrl && (
+            <YouTubeVideo videoUrl={milestone.leftVideoUrl} title={`${milestone.title} - Left`} className="rounded-2xl overflow-hidden border-2 border-[rgba(254,189,89,0.3)]" />
+          )}
+          {milestone.rightVideoUrl && (
+            <YouTubeVideo videoUrl={milestone.rightVideoUrl} title={`${milestone.title} - Right`} className="rounded-2xl overflow-hidden border-2 border-[rgba(254,189,89,0.3)]" />
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // Single video
+  if (milestone.type === 'video' && milestone.videoUrl) {
+    return (
+      <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center`}>
+        <div className={isReversed ? 'lg:order-2' : 'lg:order-1'}>
+          <YouTubeVideo videoUrl={milestone.videoUrl} title={milestone.title} className="rounded-2xl overflow-hidden border-2 border-[rgba(254,189,89,0.3)]" />
+        </div>
+        <div className={isReversed ? 'lg:order-1 lg:text-right' : 'lg:order-2'}>
+          <div
+            className="p-5 sm:p-6 rounded-2xl"
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(254, 189, 89, 0.15)',
+            }}
+          >
+            <h4 className="text-lg sm:text-xl lg:text-2xl font-display font-bold text-white">
+              {milestone.title}
+            </h4>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Placeholder or image
+  return (
+    <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center`}>
+      <div className={isReversed ? 'lg:order-2' : 'lg:order-1'}>
+        {milestone.type === 'image' && milestone.imageUrl ? (
+          <div
+            className="aspect-video rounded-2xl overflow-hidden"
+            style={{ border: '2px solid rgba(254, 189, 89, 0.3)' }}
+          >
+            <img src={milestone.imageUrl} alt={milestone.title} className="w-full h-full object-cover" />
+          </div>
+        ) : (
+          <PlaceholderCard text={milestone.placeholderText || 'Coming soon...'} />
+        )}
+      </div>
+      <div className={isReversed ? 'lg:order-1 lg:text-right' : 'lg:order-2'}>
+        <div
+          className="p-5 sm:p-6 rounded-2xl"
+          style={{
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(254, 189, 89, 0.15)',
+          }}
+        >
+          <h4 className="text-lg sm:text-xl lg:text-2xl font-display font-bold text-white">
+            {milestone.title}
+          </h4>
+        </div>
+      </div>
+    </div>
+  )
 }
 
-// Enhanced Particle component for background effect
-const Particle: React.FC<{ index: number }> = () => {
-  const randomX = Math.random() * 100
-  const randomY = Math.random() * 100
-  const randomDelay = Math.random() * 5
-  const randomDuration = 10 + Math.random() * 8
-  const randomSize = 1 + Math.random() * 2
-  const randomMovement = 40 + Math.random() * 60
+// ============================================
+// YEAR CONTENT COMPONENT
+// ============================================
+
+const YearContent: React.FC<{ data: YearData; index: number; direction: number }> = ({
+  data,
+  index,
+  direction,
+}) => {
+  const isReversed = index % 2 === 1
+
+  const variants = {
+    enter: (dir: number) => ({
+      x: dir > 0 ? 100 : -100,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (dir: number) => ({
+      x: dir > 0 ? -100 : 100,
+      opacity: 0,
+    }),
+  }
 
   return (
     <motion.div
-      className="absolute rounded-full"
+      key={data.year}
+      custom={direction}
+      variants={variants}
+      initial="enter"
+      animate="center"
+      exit="exit"
+      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+      className="w-full"
+    >
+      {/* Year Number */}
+      <div className="text-center mb-8 sm:mb-10 lg:mb-12">
+        <h3
+          className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-black tracking-tight"
+          style={{
+            background: 'linear-gradient(180deg, #FEBD59 0%, rgba(254, 189, 89, 0.4) 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}
+        >
+          {data.year}
+        </h3>
+        <div
+          className="w-16 sm:w-20 h-0.5 mx-auto mt-4"
+          style={{ background: 'linear-gradient(90deg, transparent, #FEBD59, transparent)' }}
+        />
+      </div>
+
+      {/* Milestones */}
+      <div className="space-y-8">
+        {data.milestones.map((milestone, mIndex) => (
+          <div key={mIndex}>
+            <MilestoneRenderer milestone={milestone} isReversed={isReversed} />
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  )
+}
+
+// ============================================
+// NAVIGATION ARROW BUTTON
+// ============================================
+
+const NavArrow: React.FC<{
+  direction: 'left' | 'right'
+  onClick: () => void
+  disabled: boolean
+}> = ({ direction, onClick, disabled }) => {
+  const Icon = direction === 'left' ? ChevronLeft : ChevronRight
+
+  return (
+    <motion.button
+      onClick={onClick}
+      disabled={disabled}
+      className={`
+        w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 
+        rounded-full flex items-center justify-center
+        transition-all duration-300
+        ${disabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer hover:scale-110'}
+      `}
       style={{
-        left: `${randomX}%`,
-        top: `${randomY}%`,
-        width: `${randomSize}px`,
-        height: `${randomSize}px`,
+        background: disabled ? 'rgba(255, 255, 255, 0.05)' : 'rgba(254, 189, 89, 0.15)',
+        border: `2px solid ${disabled ? 'rgba(255, 255, 255, 0.1)' : 'rgba(254, 189, 89, 0.4)'}`,
+        boxShadow: disabled ? 'none' : '0 0 30px rgba(254, 189, 89, 0.2)',
+      }}
+      whileHover={disabled ? {} : { scale: 1.1, boxShadow: '0 0 40px rgba(254, 189, 89, 0.4)' }}
+      whileTap={disabled ? {} : { scale: 0.95 }}
+    >
+      <Icon
+        size={28}
+        style={{ color: disabled ? 'rgba(255, 255, 255, 0.3)' : '#FEBD59' }}
+      />
+    </motion.button>
+  )
+}
+
+// ============================================
+// PROGRESS DOTS
+// ============================================
+
+const ProgressDots: React.FC<{
+  total: number
+  current: number
+  onDotClick: (index: number) => void
+}> = ({ total, current, onDotClick }) => (
+  <div className="flex items-center justify-center gap-2 sm:gap-3 mt-8">
+    {Array.from({ length: total }).map((_, i) => (
+      <motion.button
+        key={i}
+        onClick={() => onDotClick(i)}
+        className="relative p-1"
+        whileHover={{ scale: 1.2 }}
+        whileTap={{ scale: 0.9 }}
+      >
+        <div
+          className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-all duration-300"
+          style={{
+            background: i === current ? '#FEBD59' : 'rgba(254, 189, 89, 0.25)',
+            boxShadow: i === current ? '0 0 15px rgba(254, 189, 89, 0.8)' : 'none',
+            transform: i === current ? 'scale(1.2)' : 'scale(1)',
+          }}
+        />
+      </motion.button>
+    ))}
+  </div>
+)
+
+// ============================================
+// FLOATING PARTICLE
+// ============================================
+
+const FloatingParticle: React.FC = () => {
+  const style = {
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+    width: `${1 + Math.random() * 2}px`,
+    height: `${1 + Math.random() * 2}px`,
+  }
+
+  return (
+    <motion.div
+      className="absolute rounded-full pointer-events-none"
+      style={{
+        ...style,
         background: '#FEBD59',
-        boxShadow: '0 0 8px rgba(254, 189, 89, 0.9), 0 0 16px rgba(254, 189, 89, 0.5)'
+        boxShadow: '0 0 8px rgba(254, 189, 89, 0.7)',
       }}
       animate={{
-        y: [0, -randomMovement, 0],
-        x: [0, Math.random() * 20 - 10, 0],
-        opacity: [0.3, 0.8, 0.3],
-        scale: [1, 1.8, 1]
+        y: [0, -50, 0],
+        opacity: [0.2, 0.6, 0.2],
       }}
       transition={{
-        duration: randomDuration,
+        duration: 12 + Math.random() * 8,
         repeat: Infinity,
-        delay: randomDelay,
-        ease: "easeInOut"
+        delay: Math.random() * 5,
+        ease: 'easeInOut',
       }}
     />
   )
 }
 
-// Floating orb component for additional movement
-const FloatingOrb: React.FC<{ index: number }> = () => {
-  const randomX = Math.random() * 100
-  const randomY = Math.random() * 100
-  const randomDelay = Math.random() * 3
-  const randomDuration = 12 + Math.random() * 8
-  const randomSize = 3 + Math.random() * 5
-
-  return (
-    <motion.div
-      className="absolute rounded-full"
-      style={{
-        left: `${randomX}%`,
-        top: `${randomY}%`,
-        width: `${randomSize}px`,
-        height: `${randomSize}px`,
-        background: 'radial-gradient(circle, rgba(254, 189, 89, 0.6) 0%, rgba(254, 189, 89, 0.2) 100%)',
-        filter: 'blur(2px)',
-        boxShadow: '0 0 20px rgba(254, 189, 89, 0.6)'
-      }}
-      animate={{
-        y: [0, -80, 0],
-        x: [0, Math.random() * 40 - 20, 0],
-        opacity: [0.4, 0.9, 0.4],
-        scale: [1, 1.5, 1]
-      }}
-      transition={{
-        duration: randomDuration,
-        repeat: Infinity,
-        delay: randomDelay,
-        ease: "easeInOut"
-      }}
-    />
-  )
-}
+// ============================================
+// MAIN JOURNEY SECTION
+// ============================================
 
 const JourneySection: React.FC = () => {
-  const sectionRef = useRef(null)
-  const isInView = useInView(sectionRef, { once: false, amount: 0.1 })
-  const [particleCount, setParticleCount] = useState(40)
-  const [orbCount, setOrbCount] = useState(12)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [direction, setDirection] = useState(0)
+  const totalYears = journeyData.length
 
-  useEffect(() => {
-    const updateCounts = () => {
-      const width = window.innerWidth
-      // Reduced particle counts for better performance
-      if (width < 640) {
-        setParticleCount(15)
-        setOrbCount(5)
-      } else if (width < 768) {
-        setParticleCount(20)
-        setOrbCount(6)
-      } else if (width < 1024) {
-        setParticleCount(30)
-        setOrbCount(10)
-      } else {
-        setParticleCount(40)
-        setOrbCount(12)
-      }
+  const goToNext = (): void => {
+    if (activeIndex < totalYears - 1) {
+      setDirection(1)
+      setActiveIndex(activeIndex + 1)
     }
+  }
 
-    updateCounts()
-    
-    // Throttled resize handler
-    let resizeTimer: ReturnType<typeof setTimeout>
-    const handleResize = () => {
-      clearTimeout(resizeTimer)
-      resizeTimer = setTimeout(updateCounts, 150)
+  const goToPrev = (): void => {
+    if (activeIndex > 0) {
+      setDirection(-1)
+      setActiveIndex(activeIndex - 1)
     }
-    
-    window.addEventListener('resize', handleResize, { passive: true })
-    return () => {
-      window.removeEventListener('resize', handleResize)
-      clearTimeout(resizeTimer)
-    }
-  }, [])
+  }
 
-  const journeyEvents: JourneyEvent[] = [
-    // 🎬 Early Creative Journey
-    {
-      date: 'Apr 17, 2017',
-      title: 'The Beginning - Inspired by TBV',
-      description: 'Created early YouTube sketches and short films, inspired by The Baigan Vines (TBV). The spark that ignited a creative journey.',
-      videoUrl: 'https://www.youtube.com/embed/Z9qalRZfCi0'
-    },
-    {
-      date: 'Feb 13, 2018',
-      title: 'First Viral Success',
-      description: 'Released a video that quickly went viral, earning early recognition and validation for creative storytelling.',
-      videoUrl: 'https://www.youtube.com/embed/_D0blktc1hE'
-    },
-    {
-      date: 'Apr 1, 2018',
-      title: 'First Telugu Short Film',
-      description: 'Directed his first Telugu short film, marking a significant milestone in cinematic storytelling.'
-    },
-    // 🎥 Experimentation & Growth
-    {
-      date: 'Jan 9, 2020',
-      title: 'One of the Craziest Videos',
-      description: 'Produced one of his most experimental and creative videos, pushing boundaries in content creation and exploring new storytelling techniques.',
-      videoUrl: 'https://www.youtube.com/embed/gYuMT0itw9g'
-    },
-    {
-      date: 'Feb 2020 - 2022',
-      title: 'Skill Building & Growth',
-      description: 'Continued building skills in video editing, storytelling, and content creation. This period was all about refining the craft and experimenting with different formats.'
-    },
-    {
-      date: '2020 - 2022',
-      title: 'Meeting Imad Ali at Founders\' Fest',
-      description: 'Met Imad Ali at Founders\' Fest and recorded his vision. Loved his mission to terminate hunger and joined his team, marking the beginning of purpose-driven content creation.',
-      videoUrl: 'https://www.youtube.com/embed/ou_aBdkTlI8'
-    },
-    // 🚀 Entrepreneurial Phase
-    {
-      date: 'Mar 15, 2023',
-      title: 'Joined Edventure Park',
-      description: 'Entered India\'s 1st and largest student-focused startup incubator, marking the official beginning of the entrepreneurial journey and startup ecosystem immersion.'
-    },
-    {
-      date: 'Later 2023',
-      title: 'BioReform & Content Creation',
-      description: 'Joined BioReform as a content and media creator during the startup journey. Met Azhar Mohiuddin and continued building expertise in purpose-driven storytelling.'
-    },
-    {
-      date: '2023',
-      title: 'EdTalk Panelist',
-      description: 'Became a panelist for EdTalk, sharing insights on entrepreneurship, content creation, and the startup ecosystem with aspiring entrepreneurs.',
-      videoUrl: 'https://www.youtube.com/embed/YB8Jw19X5fY'
-    },
-    {
-      date: 'Late 2023',
-      title: 'Meeting Sayeeda Jabri',
-      description: 'Met Sayeeda Jabri and a vision sparked: she wanted to bring entrepreneurial talks to media, and Shoaib wanted to cover authentic startup stories. This meeting laid the foundation for Hyderabad Hustlers.'
-    },
-    // 🎙️ Hyderabad Hustlers
-    {
-      date: 'Dec 21, 2023',
-      title: 'Formation of Hyderabad Hustlers',
-      description: 'Co-founded Hyderabad Hustlers with Sayeeda Jabri. Initially ran podcasts while still working with BioReform, then chose to fully dedicate himself to HH, leaving BioReform. Unlike other startups that go through long pre-incubation phases, HH received direct incubation at Edventure Park due to rapid traction and impact.'
-    },
-    // 🎭 Other Creative Milestones
-    {
-      date: 'Sept 18',
-      title: 'Stand-Up Comedy Performance',
-      description: 'Performed stand-up comedy, exploring a new creative avenue and connecting with audiences through humor and storytelling.',
-      videoUrl: 'https://www.youtube.com/embed/3btEtcmv6GI'
-    },
-    {
-      date: 'Ongoing',
-      title: 'Content Format Experimentation',
-      description: 'Continued experimenting with different content formats including vlogs, shorts, and podcasts, constantly evolving and adapting to new storytelling mediums.'
+  const goToIndex = (index: number): void => {
+    setDirection(index > activeIndex ? 1 : -1)
+    setActiveIndex(index)
+  }
+
+  // Handle swipe/drag gestures
+  const handleDragEnd = (event: any, info: any): void => {
+    const swipeThreshold = 50
+    if (info.offset.x > swipeThreshold) {
+      goToPrev()
+    } else if (info.offset.x < -swipeThreshold) {
+      goToNext()
     }
-  ]
+  }
+
+  // Handle keyboard navigation
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') goToNext()
+      if (e.key === 'ArrowLeft') goToPrev()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [activeIndex])
 
   return (
-    <section 
-      ref={sectionRef}
-      id="journey" 
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black py-20 lg:py-32"
-      style={{ overflowX: 'hidden' }}
+    <section
+      id="journey"
+      className="relative bg-black py-20 sm:py-24 lg:py-32"
     >
-      {/* Enhanced Floating Particles Background */}
+      {/* Background Particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {Array.from({ length: particleCount }).map((_, i) => (
-          <Particle key={`particle-${i}`} index={i} />
-        ))}
-        {Array.from({ length: orbCount }).map((_, i) => (
-          <FloatingOrb key={`orb-${i}`} index={i} />
+        {Array.from({ length: 12 }).map((_, i) => (
+          <FloatingParticle key={i} />
         ))}
       </div>
 
-      {/* Ambient Background Orbs - Reduced blur for performance */}
-      <motion.div
-        className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full blur-2xl"
-        style={{ background: 'radial-gradient(circle, rgba(254,189,89,0.06) 0%, transparent 70%)' }}
-        animate={isInView ? {
-          scale: [1, 1.2, 1],
-          x: [0, 30, 0],
-          y: [0, -20, 0],
-        } : {}}
-        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+      {/* Ambient Glow */}
+      <div
+        className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-30"
+        style={{ background: 'radial-gradient(circle, rgba(254, 189, 89, 0.15), transparent 70%)' }}
       />
-      <motion.div
-        className="absolute bottom-1/4 left-1/4 w-80 h-80 rounded-full blur-2xl"
-        style={{ background: 'radial-gradient(circle, rgba(254,189,89,0.04) 0%, transparent 70%)' }}
-        animate={isInView ? {
-          scale: [1, 1.3, 1],
-          x: [0, -30, 0],
-          y: [0, 30, 0],
-        } : {}}
-        transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
+      <div
+        className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl pointer-events-none opacity-20"
+        style={{ background: 'radial-gradient(circle, rgba(254, 189, 89, 0.1), transparent 70%)' }}
       />
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
-        {/* Section Heading */}
+        {/* Section Header */}
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 1, ease: [0.6, 0.05, 0.01, 0.9] }}
-          className="text-center mb-16 lg:mb-24"
+          className="text-center mb-12 sm:mb-16 lg:mb-20"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
         >
-          <motion.h2
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display mb-4 leading-none tracking-tight"
-            style={{ fontWeight: 900 }}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={isInView ? { opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-black tracking-tight">
             <span className="text-white">MY </span>
-            <span className="gradient-text">JOURNEY</span>
-          </motion.h2>
-          
-          {/* Decorative Line */}
-          <motion.div
-            className="w-32 h-1 mx-auto mt-6"
-            style={{ 
-              background: 'linear-gradient(90deg, transparent 0%, #FEBD59 50%, transparent 100%)',
-              willChange: 'transform'
-            }}
-            initial={{ scaleX: 0, opacity: 0 }}
-            animate={isInView ? { scaleX: 1, opacity: 1 } : {}}
-            transition={{ duration: 1, delay: 0.5 }}
-          />
+            <span style={{ color: '#FEBD59' }}>JOURNEY</span>
+          </h2>
+          <p className="mt-4 text-white/50 font-body text-sm sm:text-base max-w-md mx-auto">
+            Navigate using arrows, keyboard, or swipe on mobile
+          </p>
         </motion.div>
 
-        {/* Timeline */}
-        <div className="max-w-7xl mx-auto relative">
-          {/* Vertical Timeline Line - Desktop Only */}
-          <div 
-            className="hidden lg:block absolute top-0 bottom-0 w-0.5 bg-[#FEBD59]" 
-            style={{ 
-              left: 'calc(50% - 1px)',
-              background: 'linear-gradient(180deg, transparent 0%, #FEBD59 10%, #FEBD59 90%, transparent 100%)'
-            }}
-          />
+        {/* Carousel Container */}
+        <div className="max-w-6xl mx-auto">
+          {/* Navigation Row */}
+          <div className="flex items-center justify-between gap-4 sm:gap-6 lg:gap-8">
+            {/* Left Arrow */}
+            <NavArrow direction="left" onClick={goToPrev} disabled={activeIndex === 0} />
 
-          {/* Timeline Events */}
-          <div className="space-y-12 lg:space-y-20">
-            {journeyEvents.map((event, index) => {
-              const isLeft = index % 2 === 0
-              
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 50 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: index * 0.05 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  className="relative"
-                >
-                  {/* Desktop Layout */}
-                  <div className="hidden lg:grid lg:grid-cols-2 lg:gap-16 items-center">
-                    {/* Left Side Content */}
-                    {isLeft && (
-                      <div className="text-right pr-10">
-                        <motion.div whileHover={{ scale: 1.02 }} className="inline-block w-full">
-                          {/* Date Badge */}
-                          <div className="flex justify-end mb-4">
-                            <motion.div
-                              className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
-                              style={{
-                                background: 'rgba(254, 189, 89, 0.15)',
-                                border: '2px solid rgba(254, 189, 89, 0.4)'
-                              }}
-                            >
-                              <Calendar size={16} style={{ color: '#FEBD59' }} />
-                              <span className="text-sm font-semibold text-[#FEBD59]">
-                                {event.date}
-                              </span>
-                            </motion.div>
-                          </div>
+            {/* Content Area with Swipe Support */}
+            <motion.div
+              className="flex-1 min-w-0 overflow-hidden cursor-grab active:cursor-grabbing"
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={handleDragEnd}
+            >
+              <AnimatePresence mode="wait" custom={direction}>
+                <YearContent
+                  key={activeIndex}
+                  data={journeyData[activeIndex]}
+                  index={activeIndex}
+                  direction={direction}
+                />
+              </AnimatePresence>
+            </motion.div>
 
-                          {/* Content Card */}
-                          <motion.div
-                            className="p-6 rounded-2xl backdrop-blur-xl text-left"
-                            style={{
-                              background: 'rgba(255, 255, 255, 0.05)',
-                              border: '1px solid rgba(254, 189, 89, 0.2)',
-                              boxShadow: '0 8px 32px rgba(254, 189, 89, 0.1)'
-                            }}
-                            whileHover={{
-                              boxShadow: '0 12px 48px rgba(254, 189, 89, 0.2)',
-                              borderColor: 'rgba(254, 189, 89, 0.4)'
-                            }}
-                          >
-                            <h3 className="text-xl font-display font-bold text-white leading-tight mb-3">
-                              {event.title}
-                            </h3>
-                            <p className="text-white/80 font-body leading-relaxed">
-                              {event.description}
-                            </p>
-                          </motion.div>
-                        </motion.div>
-                      </div>
-                    )}
+            {/* Right Arrow */}
+            <NavArrow direction="right" onClick={goToNext} disabled={activeIndex === totalYears - 1} />
+          </div>
 
-                    {/* Right Side Video */}
-                    {isLeft && event.videoUrl && (
-                      <div className="pl-10">
-                        <motion.div
-                          className="relative rounded-2xl overflow-hidden"
-                          style={{
-                            border: '2px solid rgba(254, 189, 89, 0.3)',
-                            boxShadow: '0 8px 32px rgba(254, 189, 89, 0.15)'
-                          }}
-                          whileHover={{
-                            boxShadow: '0 12px 48px rgba(254, 189, 89, 0.25)',
-                            borderColor: 'rgba(254, 189, 89, 0.5)'
-                          }}
-                        >
-                          <div className="aspect-video">
-                            <iframe
-                              src={`${event.videoUrl}?autoplay=1&mute=1&loop=1&playlist=${event.videoUrl.split('/').pop()}&controls=0&modestbranding=1&rel=0&enablejsapi=1&playsinline=1`}
-                              title={event.title}
-                              className="w-full h-full"
-                              loading="lazy"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              style={{ opacity: 0.7 }}
-                              allowFullScreen
-                            />
-                          </div>
-                          <div 
-                            className="absolute inset-0 pointer-events-none"
-                            style={{
-                              background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 100%)'
-                            }}
-                          />
-                        </motion.div>
-                      </div>
-                    )}
+          {/* Progress Dots */}
+          <ProgressDots total={totalYears} current={activeIndex} onDotClick={goToIndex} />
 
-                    {/* Left Side Video */}
-                    {!isLeft && event.videoUrl && (
-                      <div className="pr-10">
-                        <motion.div
-                          className="relative rounded-2xl overflow-hidden"
-                          style={{
-                            border: '2px solid rgba(254, 189, 89, 0.3)',
-                            boxShadow: '0 8px 32px rgba(254, 189, 89, 0.15)'
-                          }}
-                          whileHover={{
-                            boxShadow: '0 12px 48px rgba(254, 189, 89, 0.25)',
-                            borderColor: 'rgba(254, 189, 89, 0.5)'
-                          }}
-                        >
-                          <div className="aspect-video">
-                            <iframe
-                              src={`${event.videoUrl}?autoplay=1&mute=1&loop=1&playlist=${event.videoUrl.split('/').pop()}&controls=0&modestbranding=1&rel=0&enablejsapi=1&playsinline=1`}
-                              title={event.title}
-                              className="w-full h-full"
-                              loading="lazy"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              style={{ opacity: 0.7 }}
-                              allowFullScreen
-                            />
-                          </div>
-                          <div 
-                            className="absolute inset-0 pointer-events-none"
-                            style={{
-                              background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 100%)'
-                            }}
-                          />
-                        </motion.div>
-                      </div>
-                    )}
-
-                    {/* Right Side Content */}
-                    {!isLeft && (
-                      <div className="pl-10">
-                        <motion.div whileHover={{ scale: 1.02 }} className="inline-block w-full">
-                          {/* Date Badge */}
-                          <div className="flex justify-start mb-4">
-                            <motion.div
-                              className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
-                              style={{
-                                background: 'rgba(254, 189, 89, 0.15)',
-                                border: '2px solid rgba(254, 189, 89, 0.4)'
-                              }}
-                            >
-                              <Calendar size={16} style={{ color: '#FEBD59' }} />
-                              <span className="text-sm font-semibold text-[#FEBD59]">
-                                {event.date}
-                              </span>
-                            </motion.div>
-                          </div>
-
-                          {/* Content Card */}
-                          <motion.div
-                            className="p-6 rounded-2xl backdrop-blur-xl"
-                            style={{
-                              background: 'rgba(255, 255, 255, 0.05)',
-                              border: '1px solid rgba(254, 189, 89, 0.2)',
-                              boxShadow: '0 8px 32px rgba(254, 189, 89, 0.1)'
-                            }}
-                            whileHover={{
-                              boxShadow: '0 12px 48px rgba(254, 189, 89, 0.2)',
-                              borderColor: 'rgba(254, 189, 89, 0.4)'
-                            }}
-                          >
-                            <h3 className="text-xl font-display font-bold text-white leading-tight mb-3">
-                              {event.title}
-                            </h3>
-                            <p className="text-white/80 font-body leading-relaxed">
-                              {event.description}
-                            </p>
-                          </motion.div>
-                        </motion.div>
-                      </div>
-                    )}
-
-                    {/* Center Timeline Dot - Perfectly Centered */}
-                    <div
-                      className="absolute z-20"
-                      style={{
-                        left: '50%',
-                        top: '50%',
-                        transform: 'translate(-50%, -50%)'
-                      }}
-                    >
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        whileInView={{ scale: 1 }}
-                        transition={{ duration: 0.5, delay: index * 0.05 + 0.3 }}
-                        viewport={{ once: true }}
-                        className="w-4 h-4 rounded-full border-4 border-black"
-                        style={{
-                          background: '#FEBD59',
-                          boxShadow: '0 0 20px rgba(254, 189, 89, 0.8)'
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Mobile Layout */}
-                  <div className="lg:hidden">
-                    <motion.div whileHover={{ scale: 1.02 }} className="relative">
-                      {/* Date Badge */}
-                      <div className="mb-4">
-                        <motion.div
-                          className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
-                          style={{
-                            background: 'rgba(254, 189, 89, 0.15)',
-                            border: '2px solid rgba(254, 189, 89, 0.4)'
-                          }}
-                        >
-                          <Calendar size={16} style={{ color: '#FEBD59' }} />
-                          <span className="text-sm font-semibold text-[#FEBD59]">
-                            {event.date}
-                          </span>
-                        </motion.div>
-                      </div>
-
-                      {/* Video (if exists) */}
-                      {event.videoUrl && (
-                        <motion.div
-                          className="relative rounded-2xl overflow-hidden mb-4"
-                          style={{
-                            border: '2px solid rgba(254, 189, 89, 0.3)',
-                            boxShadow: '0 8px 32px rgba(254, 189, 89, 0.15)'
-                          }}
-                        >
-                          <div className="aspect-video">
-                            <iframe
-                              src={`${event.videoUrl}?autoplay=1&mute=1&loop=1&playlist=${event.videoUrl.split('/').pop()}&controls=0&modestbranding=1&rel=0&enablejsapi=1&playsinline=1`}
-                              title={event.title}
-                              className="w-full h-full"
-                              loading="lazy"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              style={{ opacity: 0.7 }}
-                              allowFullScreen
-                            />
-                          </div>
-                        </motion.div>
-                      )}
-
-                      {/* Content Card */}
-                      <motion.div
-                        className="p-6 rounded-2xl backdrop-blur-xl"
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid rgba(254, 189, 89, 0.2)',
-                          boxShadow: '0 8px 32px rgba(254, 189, 89, 0.1)'
-                        }}
-                      >
-                        <h3 className="text-lg font-display font-bold text-white leading-tight mb-3">
-                          {event.title}
-                        </h3>
-                        <p className="text-white/80 font-body leading-relaxed text-sm">
-                          {event.description}
-                        </p>
-                      </motion.div>
-                    </motion.div>
-                  </div>
-                </motion.div>
-              )
-            })}
+          {/* Year Counter */}
+          <div className="text-center mt-6">
+            <span className="text-white/40 font-body text-sm">
+              <span className="text-[#FEBD59] font-semibold">{String(activeIndex + 1).padStart(2, '0')}</span>
+              <span className="mx-2">/</span>
+              <span>{String(totalYears).padStart(2, '0')}</span>
+            </span>
           </div>
         </div>
-
-        {/* Impact So Far - Centered Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="mt-20 lg:mt-32 max-w-5xl mx-auto"
-        >
-          <motion.div
-            className="relative p-8 sm:p-10 lg:p-12 rounded-3xl backdrop-blur-xl"
-            style={{
-              background: 'linear-gradient(135deg, rgba(254,189,89,0.15) 0%, rgba(254,189,89,0.08) 100%)',
-              border: '2px solid rgba(254, 189, 89, 0.4)',
-              boxShadow: '0 8px 32px rgba(254, 189, 89, 0.2)'
-            }}
-          >
-            {/* Heading */}
-            <motion.h3
-              className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-center mb-8 lg:mb-12"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              viewport={{ once: true }}
-            >
-              <span className="gradient-text">Impact So Far</span>
-            </motion.h3>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-8">
-              {/* Stat 1 */}
-              <motion.div
-                className="text-center p-6 rounded-2xl"
-                style={{
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  border: '1px solid rgba(254, 189, 89, 0.2)'
-                }}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.05, borderColor: 'rgba(254, 189, 89, 0.5)' }}
-              >
-                <div className="text-4xl sm:text-5xl font-display font-bold gradient-text mb-2">90+</div>
-                <div className="text-white/90 font-body text-sm sm:text-base">Entrepreneurs Covered</div>
-              </motion.div>
-
-              {/* Stat 2 */}
-              <motion.div
-                className="text-center p-6 rounded-2xl"
-                style={{
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  border: '1px solid rgba(254, 189, 89, 0.2)'
-                }}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.05, borderColor: 'rgba(254, 189, 89, 0.5)' }}
-              >
-                <div className="text-4xl sm:text-5xl font-display font-bold gradient-text mb-2">1M+</div>
-                <div className="text-white/90 font-body text-sm sm:text-base">Audience Reached</div>
-              </motion.div>
-
-              {/* Stat 3 */}
-              <motion.div
-                className="text-center p-6 rounded-2xl sm:col-span-2 lg:col-span-1"
-                style={{
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  border: '1px solid rgba(254, 189, 89, 0.2)'
-                }}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.05, borderColor: 'rgba(254, 189, 89, 0.5)' }}
-              >
-                <div className="text-4xl sm:text-5xl font-display font-bold gradient-text mb-2">Multiple</div>
-                <div className="text-white/90 font-body text-sm sm:text-base">Brand Collaborations</div>
-              </motion.div>
-            </div>
-
-            {/* Partnerships */}
-            <motion.div
-              className="text-center"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <h4 className="text-xl sm:text-2xl font-display font-bold text-[#FEBD59] mb-4">
-                Official Partners
-              </h4>
-              <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-                {['August Fest', 'FFest', 'Founders Friday', 'Feel Giveaway', 'TGIC Project'].map((partner, index) => (
-                  <motion.span
-                    key={partner}
-                    className="px-4 sm:px-6 py-2 sm:py-3 rounded-full font-body text-sm sm:text-base font-medium text-white"
-                    style={{
-                      background: 'rgba(254, 189, 89, 0.2)',
-                      border: '1px solid rgba(254, 189, 89, 0.4)'
-                    }}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.4, delay: 0.7 + index * 0.1 }}
-                    viewport={{ once: true }}
-                    whileHover={{
-                      scale: 1.1,
-                      background: 'rgba(254, 189, 89, 0.3)',
-                      borderColor: 'rgba(254, 189, 89, 0.6)'
-                    }}
-                  >
-                    {partner}
-                  </motion.span>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-
-        {/* Final Quote */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="mt-24 text-center max-w-4xl mx-auto"
-        >
-          <motion.blockquote
-            className="relative p-8 sm:p-10 rounded-2xl backdrop-blur-xl"
-            style={{
-              background: 'linear-gradient(135deg, rgba(254,189,89,0.1) 0%, rgba(254,189,89,0.05) 100%)',
-              border: '2px solid rgba(254, 189, 89, 0.3)',
-              boxShadow: '0 8px 32px rgba(254, 189, 89, 0.15)'
-            }}
-          >
-            <div className="text-4xl sm:text-5xl text-[#FEBD59] mb-4 font-display" style={{ lineHeight: 1 }}>"</div>
-            <p className="text-xl sm:text-2xl md:text-3xl font-body italic text-white leading-relaxed font-medium">
-              To inspire the youth of Hyderabad to pursue their passions, build something of their own, and not be afraid to follow the uncomfortable paths.
-            </p>
-            <div className="mt-6 text-center">
-              <cite className="not-italic text-[#FEBD59] font-display font-bold text-lg tracking-wide">
-                ~ Shoaib Khan
-              </cite>
-            </div>
-          </motion.blockquote>
-        </motion.div>
       </div>
     </section>
   )

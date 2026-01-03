@@ -2,6 +2,9 @@ import React from 'react'
 import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
 import { Pen, Clapperboard, Mic, Film, Sparkles, Zap } from 'lucide-react'
+import LazyImage from './LazyImage'
+import HighlightedText from './HighlightedText'
+import SectionHeader from './SectionHeader'
 
 const AboutSection: React.FC = () => {
   const sectionRef = useRef(null)
@@ -16,43 +19,6 @@ const AboutSection: React.FC = () => {
     { Icon: Sparkles, position: { bottom: '20%', right: '15%' }, delay: 1.2 },
     { Icon: Zap, position: { top: '65%', left: '12%' }, delay: 1.5 },
   ]
-
-  // Helper function to highlight specific words
-  const highlightText = (text: string) => {
-    const highlights = [
-      'Shoaib Khan',
-      'content creator',
-      'director',
-      'writer',
-      'video editor',
-      'entrepreneur',
-      '2017',
-      'video editing',
-      'content creation',
-      'entrepreneurship',
-      'Edventure Park',
-      'BioReform',
-      'Hyderabad Hustlers',
-      '50+',
-      'entrepreneurs',
-      '1M+',
-      'audiences',
-      'The Baigan Vines'
-    ]
-
-    let result = text
-    // Sort by length (longest first) to avoid partial replacements
-    const sortedHighlights = [...highlights].sort((a, b) => b.length - a.length)
-
-    sortedHighlights.forEach(phrase => {
-      const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      // Use lookarounds instead of \b to handle terms ending in symbols like "50+"
-      const regex = new RegExp(`(?<!\\w)(${escapedPhrase})(?!\\w)`, 'gi')
-      result = result.replace(regex, '<span class="text-[#FEBD59] font-semibold">$1</span>')
-    })
-
-    return result
-  }
 
   // Text paragraphs for staggered animation
   const paragraphs = [
@@ -148,35 +114,7 @@ const AboutSection: React.FC = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
         {/* Cinematic Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 1, ease: [0.6, 0.05, 0.01, 0.9] }}
-          className="text-center mb-16 lg:mb-24"
-        >
-          <motion.h2
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display mb-4 leading-none tracking-tight"
-            style={{ fontWeight: 900 }}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={isInView ? { opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <span className="text-white">ABOUT </span>
-            <span className="gradient-text">ME</span>
-          </motion.h2>
-
-          {/* Decorative Line */}
-          <motion.div
-            className="w-32 h-1 mx-auto mt-6"
-            style={{
-              background: 'linear-gradient(90deg, transparent 0%, #FEBD59 50%, transparent 100%)',
-              willChange: 'transform'
-            }}
-            initial={{ scaleX: 0, opacity: 0 }}
-            animate={isInView ? { scaleX: 1, opacity: 1 } : {}}
-            transition={{ duration: 1, delay: 0.5 }}
-          />
-        </motion.div>
+        <SectionHeader title="ABOUT" gradientText="ME" isInView={isInView} />
 
         {/* Two Column Layout */}
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center max-w-7xl mx-auto">
@@ -199,8 +137,9 @@ const AboutSection: React.FC = () => {
                   ease: "easeOut"
                 }}
                 className="text-lg sm:text-xl lg:text-xl font-body text-white/90 leading-relaxed font-medium"
-                dangerouslySetInnerHTML={{ __html: highlightText(text) }}
-              />
+              >
+                <HighlightedText text={text} />
+              </motion.p>
             ))}
 
             {/* Quote Block */}
@@ -246,7 +185,7 @@ const AboutSection: React.FC = () => {
               }}
               transition={{ duration: 0.4 }}
             >
-              <img
+              <LazyImage
                 src="/assets/skback.webp"
                 alt="Shoaib Khan - Content Creator and Entrepreneur"
                 className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105 rounded-lg"

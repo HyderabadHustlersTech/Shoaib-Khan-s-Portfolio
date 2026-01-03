@@ -1,71 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
-import { getLenis } from '../utils/lenis'
+import { TIMING } from '../constants/config'
+import { useActiveSection } from '../hooks/useActiveSection'
+import { useIsAtTop } from '../hooks/useScrollPosition'
 
 const Navbar: React.FC = () => {
-  const [isAtTop, setIsAtTop] = useState(true)
+  const isAtTop = useIsAtTop()
+  const activeSection = useActiveSection()
   const [isNavOpen, setIsNavOpen] = useState(false)
-  const [activeSection, setActiveSection] = useState('hero')
-
-  useEffect(() => {
-    let ticking = false
-    
-    const handleScroll = () => {
-      if (ticking) return
-      
-      ticking = true
-      requestAnimationFrame(() => {
-        const scrollY = window.scrollY || window.pageYOffset || 0
-        
-        const heroSection = document.getElementById('hero')
-        if (heroSection) {
-          const heroBottom = heroSection.offsetHeight
-          setIsAtTop(scrollY < heroBottom - 100)
-        }
-
-        // Detect active section with optimized threshold
-        const sections = ['hero', 'about', 'journey', 'experience', 'contact']
-        const viewportHeight = window.innerHeight
-        const threshold = viewportHeight * 0.25
-        
-        for (const section of sections) {
-          const element = document.getElementById(section)
-          if (element) {
-            const rect = element.getBoundingClientRect()
-            // More forgiving threshold for section detection
-            if (rect.top <= threshold && rect.bottom >= threshold * 0.5) {
-              setActiveSection(section)
-              break
-            }
-          }
-        }
-        
-        ticking = false
-      })
-    }
-
-    // Listen to scroll events - Lenis will trigger native scroll events
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    
-    // Also listen to Lenis scroll events if available
-    const lenis = getLenis()
-    const lenisScrollHandler = () => handleScroll()
-    
-    if (lenis) {
-      lenis.on('scroll', lenisScrollHandler)
-    }
-    
-    // Initial check
-    handleScroll()
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-      if (lenis) {
-        lenis.off('scroll', lenisScrollHandler)
-      }
-    }
-  }, [])
 
   const navItems = [
     { name: 'About', href: '#about' },
@@ -78,12 +21,12 @@ const Navbar: React.FC = () => {
     const element = document.querySelector(href)
     if (element) {
       setIsNavOpen(false)
-      
+
       // Small delay to allow menu to close first
       setTimeout(() => {
         // Use native smooth scroll for better performance
         element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 100)
+      }, TIMING.MENU_CLOSE_DELAY)
     }
   }, [])
 
@@ -102,7 +45,7 @@ const Navbar: React.FC = () => {
               width: isAtTop ? '100%' : '85%',
             }}
             transition={{
-              duration: 0.5,
+              duration: TIMING.NAVBAR_TRANSITION_DURATION / 1000,
               ease: [0.4, 0, 0.2, 1]
             }}
             className="rounded-full px-6 py-2 bg-black/90 backdrop-blur-xl shadow-2xl mx-auto"

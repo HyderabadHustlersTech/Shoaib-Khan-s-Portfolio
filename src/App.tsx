@@ -4,7 +4,8 @@ import { Helmet } from 'react-helmet-async'
 import { motion, AnimatePresence } from 'framer-motion'
 import SplashScreen from './components/SplashScreen'
 import Home from './pages/Home'
-import { initLenis, destroyLenis } from './utils/lenis'
+import ErrorBoundary from './components/ErrorBoundary'
+import { TIMING } from './constants/config'
 
 function App() {
   const [showSplash, setShowSplash] = useState(true)
@@ -19,18 +20,13 @@ function App() {
   const imageUrl = `${siteOrigin}${seo.imagePath}`
 
   useEffect(() => {
-    // Initialize smooth scrolling after splash screen
-    // Initialize Lenis immediately but it will start working after splash
-    initLenis()
-    
     // Hide splash screen after animation
     const timer = setTimeout(() => {
       setShowSplash(false)
-    }, 9500)
+    }, TIMING.SPLASH_SCREEN_DURATION)
 
     return () => {
       clearTimeout(timer)
-      destroyLenis()
     }
   }, [])
 
@@ -64,15 +60,17 @@ function App() {
       </AnimatePresence>
 
       {!showSplash && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, ease: "easeInOut" }}
-        >
-          <Routes>
-            <Route path="/" element={<Home />} />
-          </Routes>
-        </motion.div>
+        <ErrorBoundary>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+          >
+            <Routes>
+              <Route path="/" element={<Home />} />
+            </Routes>
+          </motion.div>
+        </ErrorBoundary>
       )}
     </div>
   )
