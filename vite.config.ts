@@ -17,6 +17,16 @@ export default defineConfig({
         drop_console: true,
         drop_debugger: true
       }
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'motion': ['framer-motion'],
+          'lenis': ['lenis'],
+          'icons': ['lucide-react'],
+        }
+      }
     }
   }
 })

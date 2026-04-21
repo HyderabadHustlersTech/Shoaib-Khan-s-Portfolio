@@ -365,13 +365,12 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({ milestone }) => {
                   />
                 </motion.div>
               ) : (
-                <MediaPlaceholder title={milestone.title} type="image" />
+                <MediaPlaceholder type="image" />
               )
             )}
 
             {milestone.type === 'placeholder' && (
               <MediaPlaceholder
-                title={milestone.title}
                 text={milestone.placeholderText}
                 type="video"
               />
@@ -591,7 +590,6 @@ const ImpactStats: React.FC = () => {
 
           <div
             className="ticker-container flex items-center py-4"
-            style={{ width: 'max-content' }}
           >
             {/* First set of logos */}
             {collaboratedBrands.map((brand, index) => (
@@ -631,20 +629,6 @@ const ImpactStats: React.FC = () => {
             ))}
           </div>
 
-          <style>{`
-            @keyframes ticker {
-              0% { transform: translateX(0); }
-              100% { transform: translateX(-50%); }
-            }
-            .ticker-container {
-              animation: ticker 6s linear infinite;
-            }
-            @media (min-width: 768px) {
-              .ticker-container {
-                animation: ticker 10s linear infinite;
-              }
-            }
-          `}</style>
         </div>
       </motion.div>
     </motion.div>

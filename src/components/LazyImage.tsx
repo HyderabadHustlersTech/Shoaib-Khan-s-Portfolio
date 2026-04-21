@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+type ImgProps = Omit<
+  React.ImgHTMLAttributes<HTMLImageElement>,
+  'onAnimationStart' | 'onDragStart' | 'onDragEnd' | 'onDrag'
+>
+
+interface LazyImageProps extends ImgProps {
   src: string
   alt: string
   placeholderColor?: string

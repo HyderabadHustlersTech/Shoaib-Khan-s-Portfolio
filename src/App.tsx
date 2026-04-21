@@ -11,12 +11,13 @@ import { useLenis } from './hooks/useLenis'
 function App() {
   const [showSplash, setShowSplash] = useState(true)
 
-  // Initialize Lenis smooth scrolling after splash screen
+  // Initialize Lenis smooth scrolling only after splash ends (and never on touch devices)
   useLenis({
     duration: 1.2,
     smoothWheel: true,
-    smoothTouch: false, // Better mobile experience with native scroll
+    smoothTouch: false,
     wheelMultiplier: 1,
+    enabled: !showSplash,
   })
   const seo = {
     title: 'Shoaib Khan - Content Creator & Entrepreneur',

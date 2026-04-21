@@ -95,12 +95,6 @@ iframe {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Performance: Isolate rendering contexts */
-section {
-  contain: layout style paint;
-  isolation: isolate;
-}
-
 /* Optimize scrolling performance */
 html {
   scroll-padding-top: 80px;
@@ -293,6 +287,31 @@ a:focus-visible {
   transform: translateZ(0);
   backface-visibility: hidden;
   perspective: 1000px;
+}
+
+/* Collaborations ticker */
+@keyframes ticker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-container {
+  width: max-content !important;
+  max-width: none !important;
+  animation: ticker 30s linear infinite;
+  will-change: transform;
+}
+
+@media (min-width: 768px) {
+  .ticker-container {
+    animation: ticker 45s linear infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-container {
+    animation: ticker 60s linear infinite !important;
+  }
 }
 
 /* Custom scrollbar */

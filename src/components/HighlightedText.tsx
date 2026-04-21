@@ -47,19 +47,17 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
 
   sortedHighlights.forEach(phrase => {
     const regex = new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
-    let match
+    let match: RegExpExecArray | null
     while ((match = regex.exec(text)) !== null) {
-      // Check if this position is already covered by a longer match
+      const start = match.index
+      const end = start + match[0].length
+      const phrase = match[0]
       const overlaps = matches.some(m =>
-        (match.index >= m.start && match.index < m.end) ||
-        (match.index + match[0].length > m.start && match.index < m.start)
+        (start >= m.start && start < m.end) ||
+        (end > m.start && start < m.start)
       )
       if (!overlaps) {
-        matches.push({
-          start: match.index,
-          end: match.index + match[0].length,
-          phrase: match[0]
-        })
+        matches.push({ start, end, phrase })
       }
     }
   })
