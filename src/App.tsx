@@ -6,9 +6,19 @@ import SplashScreen from './components/SplashScreen'
 import Home from './pages/Home'
 import ErrorBoundary from './components/ErrorBoundary'
 import { TIMING } from './constants/config'
+import { useLenis } from './hooks/useLenis'
 
 function App() {
   const [showSplash, setShowSplash] = useState(true)
+
+  // Initialize Lenis smooth scrolling only after splash ends (and never on touch devices)
+  useLenis({
+    duration: 1.2,
+    smoothWheel: true,
+    smoothTouch: false,
+    wheelMultiplier: 1,
+    enabled: !showSplash,
+  })
   const seo = {
     title: 'Shoaib Khan - Content Creator & Entrepreneur',
     description: 'Shoaib Khan - Content Creator, Video Editor, Director & Entrepreneur from Hyderabad. Co-Founder of HH.',

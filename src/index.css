@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Lenis Smooth Scroll Styles */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -9,7 +31,9 @@
 }
 
 html {
-  scroll-behavior: smooth; /* Native smooth scrolling */
+  /* Lenis handles smooth scrolling - native scroll-behavior removed */
+  scroll-padding-top: 80px;
+  /* For anchor links navigation */
 }
 
 body {
@@ -54,6 +78,7 @@ iframe {
 
 /* Performance optimizations */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -68,12 +93,6 @@ iframe {
   /* Reduce repaints */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Performance: Isolate rendering contexts */
-section {
-  contain: layout style paint;
-  isolation: isolate;
 }
 
 /* Optimize scrolling performance */
@@ -96,6 +115,7 @@ html {
 
 /* Mobile performance optimizations */
 @media (max-width: 768px) {
+
   /* Reduce blur effects on mobile for better performance */
   [style*="backdrop-filter"],
   .backdrop-blur-xl,
@@ -115,7 +135,8 @@ html {
   }
 
   /* Better touch targets */
-  button, a {
+  button,
+  a {
     min-height: 44px;
     min-width: 44px;
   }
@@ -134,15 +155,18 @@ html {
 
 /* Very small screens - text sizing optimization */
 @media (max-width: 375px) {
+
   /* Hero section name - reduce to 3xl on very small screens */
   h1.text-4xl {
-    font-size: 1.875rem !important; /* 3xl equivalent */
+    font-size: 1.875rem !important;
+    /* 3xl equivalent */
     line-height: 2.25rem !important;
   }
 
   /* About section heading */
   h2.text-3xl {
-    font-size: 1.5rem !important; /* 2xl equivalent */
+    font-size: 1.5rem !important;
+    /* 2xl equivalent */
     line-height: 2rem !important;
   }
 
@@ -157,6 +181,7 @@ html {
 
 /* Landscape orientation on mobile */
 @media (max-height: 500px) and (orientation: landscape) {
+
   /* Reduce vertical spacing */
   section {
     padding-top: 3rem !important;
@@ -262,6 +287,31 @@ a:focus-visible {
   transform: translateZ(0);
   backface-visibility: hidden;
   perspective: 1000px;
+}
+
+/* Collaborations ticker */
+@keyframes ticker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-container {
+  width: max-content !important;
+  max-width: none !important;
+  animation: ticker 30s linear infinite;
+  will-change: transform;
+}
+
+@media (min-width: 768px) {
+  .ticker-container {
+    animation: ticker 45s linear infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-container {
+    animation: ticker 60s linear infinite !important;
+  }
 }
 
 /* Custom scrollbar */

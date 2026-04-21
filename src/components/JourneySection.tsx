@@ -1,177 +1,437 @@
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Play, ChevronLeft, ChevronRight } from 'lucide-react'
-import { journeyData, type Milestone, type YearData } from '../data/journeyData'
-import YouTubeVideo from './YouTubeVideo'
+import React, { useState, useRef } from 'react'
+import { motion, useInView } from 'framer-motion'
+import { Play, Image as ImageIcon, Calendar } from 'lucide-react'
+import { journeyData, impactStats, collaboratedBrands, type Milestone, type YearData } from '../data/journeyData'
+import { getYouTubeVideoId, getYouTubeThumbnail, getYouTubeEmbedUrl } from '../utils/youtube'
+import SectionHeader from './SectionHeader'
 
 // ============================================
-// PLACEHOLDER COMPONENT
+// VIDEO PLAYER COMPONENT (with timestamp support)
 // ============================================
 
-const PlaceholderCard: React.FC<{ text: string }> = ({ text }) => (
-  <div
-    className="relative aspect-video rounded-2xl flex items-center justify-center"
-    style={{
-      background: 'linear-gradient(135deg, rgba(254, 189, 89, 0.08) 0%, rgba(254, 189, 89, 0.03) 100%)',
-      border: '2px dashed rgba(254, 189, 89, 0.3)',
-    }}
-  >
-    <div className="text-center p-4">
-      <div
-        className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center"
-        style={{ background: 'rgba(254, 189, 89, 0.15)' }}
-      >
-        <Play size={20} style={{ color: '#FEBD59' }} />
-      </div>
-      <p className="text-white/50 font-body text-sm">{text}</p>
-    </div>
-  </div>
-)
+interface VideoPlayerProps {
+  videoUrl: string
+  title: string
+  startTime?: string
+  endTime?: string
+  customThumbnail?: string
+  openInYouTube?: boolean
+}
 
-// ============================================
-// MILESTONE RENDERER
-// ============================================
+const VideoPlayer: React.FC<VideoPlayerProps> = ({
+  videoUrl,
+  title,
+  startTime,
+  endTime,
+  customThumbnail,
+  openInYouTube: shouldOpenInYouTube,
+}) => {
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [embedError, setEmbedError] = useState(false)
+  const [thumbnailQuality, setThumbnailQuality] = useState<'maxresdefault' | 'hqdefault' | 'mqdefault' | 'sddefault' | 'default'>('maxresdefault')
+  const videoId = getYouTubeVideoId(videoUrl)
+  const thumbnailUrl = customThumbnail || getYouTubeThumbnail(videoId, thumbnailQuality === 'default' ? 'default' : thumbnailQuality)
 
-const MilestoneRenderer: React.FC<{
-  milestone: Milestone
-  isReversed: boolean
-}> = ({ milestone, isReversed }) => {
-  // Side-by-side videos
-  if (milestone.type === 'side-by-side') {
-    return (
-      <div className="space-y-4">
-        <h4 className="text-lg sm:text-xl lg:text-2xl font-display font-bold text-white text-center mb-6">
-          {milestone.title}
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-          {milestone.leftVideoUrl && (
-            <YouTubeVideo videoUrl={milestone.leftVideoUrl} title={`${milestone.title} - Left`} className="rounded-2xl overflow-hidden border-2 border-[rgba(254,189,89,0.3)]" />
-          )}
-          {milestone.rightVideoUrl && (
-            <YouTubeVideo videoUrl={milestone.rightVideoUrl} title={`${milestone.title} - Right`} className="rounded-2xl overflow-hidden border-2 border-[rgba(254,189,89,0.3)]" />
-          )}
-        </div>
-      </div>
-    )
+  const embedUrl = getYouTubeEmbedUrl(videoId, {
+    autoplay: true,
+    start: startTime,
+    end: endTime
+  })
+
+  const handleThumbnailError = () => {
+    // Fallback chain: maxresdefault -> hqdefault -> mqdefault -> sddefault -> default
+    if (thumbnailQuality === 'maxresdefault') {
+      setThumbnailQuality('hqdefault')
+    } else if (thumbnailQuality === 'hqdefault') {
+      setThumbnailQuality('mqdefault')
+    } else if (thumbnailQuality === 'mqdefault') {
+      setThumbnailQuality('sddefault')
+    } else if (thumbnailQuality === 'sddefault') {
+      setThumbnailQuality('default')
+    }
   }
 
-  // Single video
-  if (milestone.type === 'video' && milestone.videoUrl) {
-    return (
-      <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center`}>
-        <div className={isReversed ? 'lg:order-2' : 'lg:order-1'}>
-          <YouTubeVideo videoUrl={milestone.videoUrl} title={milestone.title} className="rounded-2xl overflow-hidden border-2 border-[rgba(254,189,89,0.3)]" />
-        </div>
-        <div className={isReversed ? 'lg:order-1 lg:text-right' : 'lg:order-2'}>
-          <div
-            className="p-5 sm:p-6 rounded-2xl"
-            style={{
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid rgba(254, 189, 89, 0.15)',
-            }}
-          >
-            <h4 className="text-lg sm:text-xl lg:text-2xl font-display font-bold text-white">
-              {milestone.title}
-            </h4>
-          </div>
-        </div>
-      </div>
-    )
+  const openYouTubeInNewTab = () => {
+    const timeParam = startTime ? `&t=${startTime.replace(':', 'm')}s` : ''
+    window.open(`https://www.youtube.com/watch?v=${videoId}${timeParam}`, '_blank')
   }
 
-  // Placeholder or image
-  return (
-    <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center`}>
-      <div className={isReversed ? 'lg:order-2' : 'lg:order-1'}>
-        {milestone.type === 'image' && milestone.imageUrl ? (
-          <div
-            className="aspect-video rounded-2xl overflow-hidden"
-            style={{ border: '2px solid rgba(254, 189, 89, 0.3)' }}
+  const handlePlayClick = () => {
+    if (shouldOpenInYouTube) {
+      openYouTubeInNewTab()
+      return
+    }
+    setIsPlaying(true)
+    // Set a timeout to detect if embedding might have failed
+    setTimeout(() => {
+      setEmbedError(true)
+    }, 5000)
+  }
+
+  if (isPlaying) {
+    return (
+      <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-2xl">
+        <iframe
+          src={embedUrl}
+          title={title}
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+        {embedError && (
+          <motion.div
+            className="absolute top-4 right-4 z-20"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
           >
-            <img src={milestone.imageUrl} alt={milestone.title} className="w-full h-full object-cover" />
-          </div>
-        ) : (
-          <PlaceholderCard text={milestone.placeholderText || 'Coming soon...'} />
+            <button
+              onClick={openYouTubeInNewTab}
+              className="px-4 py-2 rounded-lg text-sm font-semibold backdrop-blur-md transition-all duration-300"
+              style={{
+                background: 'rgba(254, 189, 89, 0.95)',
+                color: '#000',
+                boxShadow: '0 4px 12px rgba(254, 189, 89, 0.4)',
+              }}
+            >
+              Open in YouTube
+            </button>
+          </motion.div>
         )}
       </div>
-      <div className={isReversed ? 'lg:order-1 lg:text-right' : 'lg:order-2'}>
-        <div
-          className="p-5 sm:p-6 rounded-2xl"
-          style={{
-            background: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid rgba(254, 189, 89, 0.15)',
-          }}
+    )
+  }
+
+  return (
+    <motion.div
+      className="relative w-full aspect-video rounded-xl overflow-hidden cursor-pointer group shadow-2xl"
+      onClick={handlePlayClick}
+      whileHover={{ scale: 1.01 }}
+      transition={{ duration: 0.3 }}
+    >
+      <img
+        src={thumbnailUrl}
+        alt={title}
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        loading="lazy"
+        onError={handleThumbnailError}
+      />
+
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+
+      {/* Play button */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <motion.div
+          className="relative"
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.9 }}
         >
-          <h4 className="text-lg sm:text-xl lg:text-2xl font-display font-bold text-white">
-            {milestone.title}
-          </h4>
-        </div>
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center backdrop-blur-sm"
+            style={{
+              background: 'rgba(254, 189, 89, 0.95)',
+              boxShadow: '0 0 50px rgba(254, 189, 89, 0.7), inset 0 0 20px rgba(255, 255, 255, 0.3)',
+            }}
+          >
+            <Play size={26} className="ml-1" style={{ color: '#000' }} fill="#000" />
+          </div>
+
+          {/* Pulse rings */}
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            style={{ border: '2px solid rgba(254, 189, 89, 0.6)' }}
+            animate={{ scale: [1, 1.4], opacity: [0.8, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            style={{ border: '2px solid rgba(254, 189, 89, 0.4)' }}
+            animate={{ scale: [1, 1.6], opacity: [0.6, 0] }}
+            transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+          />
+        </motion.div>
       </div>
+    </motion.div>
+  )
+}
+
+// ============================================
+// SIDE-BY-SIDE VIDEO PLAYER
+// ============================================
+
+interface SideBySideVideoProps {
+  leftVideoUrl: string
+  rightVideoUrl: string
+  title: string
+  leftStartTime?: string
+  leftEndTime?: string
+  rightStartTime?: string
+  rightEndTime?: string
+  leftThumbnail?: string
+  rightThumbnail?: string
+}
+
+const SideBySideVideo: React.FC<SideBySideVideoProps> = ({
+  leftVideoUrl,
+  rightVideoUrl,
+  title,
+  leftStartTime,
+  leftEndTime,
+  rightStartTime,
+  rightEndTime,
+  leftThumbnail,
+  rightThumbnail,
+}) => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <VideoPlayer
+        videoUrl={leftVideoUrl}
+        title={`${title} - Part 1`}
+        startTime={leftStartTime}
+        endTime={leftEndTime}
+        customThumbnail={leftThumbnail}
+      />
+      <VideoPlayer
+        videoUrl={rightVideoUrl}
+        title={`${title} - Part 2`}
+        startTime={rightStartTime}
+        endTime={rightEndTime}
+        customThumbnail={rightThumbnail}
+      />
     </div>
   )
 }
 
 // ============================================
-// YEAR CONTENT COMPONENT
+// LOCAL VIDEO PLAYER COMPONENT (for video files)
 // ============================================
 
-const YearContent: React.FC<{ data: YearData; index: number; direction: number }> = ({
-  data,
-  index,
-  direction,
-}) => {
-  const isReversed = index % 2 === 1
+interface LocalVideoPlayerProps {
+  videoFile: string
+  title: string
+}
 
-  const variants = {
-    enter: (dir: number) => ({
-      x: dir > 0 ? 100 : -100,
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (dir: number) => ({
-      x: dir > 0 ? -100 : 100,
-      opacity: 0,
-    }),
-  }
-
+const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({ videoFile, title }) => {
   return (
     <motion.div
-      key={data.year}
-      custom={direction}
-      variants={variants}
-      initial="enter"
-      animate="center"
-      exit="exit"
-      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-      className="w-full"
+      className="w-full aspect-video rounded-xl overflow-hidden shadow-2xl"
+      whileHover={{ scale: 1.01 }}
+      transition={{ duration: 0.3 }}
     >
-      {/* Year Number */}
-      <div className="text-center mb-8 sm:mb-10 lg:mb-12">
-        <h3
-          className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-black tracking-tight"
+      <video
+        src={videoFile}
+        title={title}
+        className="w-full h-full object-cover"
+        autoPlay
+        loop
+        muted
+        playsInline
+      />
+    </motion.div>
+  )
+}
+
+// ============================================
+// PLACEHOLDER COMPONENT
+// ============================================
+
+interface PlaceholderProps {
+  text?: string
+  type: 'video' | 'image'
+}
+
+const MediaPlaceholder: React.FC<PlaceholderProps> = ({ text, type }) => (
+  <motion.div
+    className="w-full aspect-video rounded-xl flex flex-col items-center justify-center relative overflow-hidden"
+    style={{
+      background: 'linear-gradient(135deg, rgba(254, 189, 89, 0.03) 0%, rgba(254, 189, 89, 0.01) 100%)',
+      border: '2px dashed rgba(254, 189, 89, 0.2)',
+    }}
+    whileHover={{
+      borderColor: 'rgba(254, 189, 89, 0.4)',
+      background: 'linear-gradient(135deg, rgba(254, 189, 89, 0.05) 0%, rgba(254, 189, 89, 0.02) 100%)'
+    }}
+  >
+    {/* Diagonal pattern overlay */}
+    <div
+      className="absolute inset-0 opacity-5"
+      style={{
+        backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(254, 189, 89, 0.1) 10px, rgba(254, 189, 89, 0.1) 20px)'
+      }}
+    />
+
+    <motion.div
+      className="w-12 h-12 rounded-full flex items-center justify-center mb-3 relative z-10"
+      style={{ background: 'rgba(254, 189, 89, 0.1)' }}
+      animate={{ scale: [1, 1.05, 1] }}
+      transition={{ duration: 3, repeat: Infinity }}
+    >
+      {type === 'video' ? (
+        <Play size={22} style={{ color: '#FEBD59' }} />
+      ) : (
+        <ImageIcon size={22} style={{ color: '#FEBD59' }} />
+      )}
+    </motion.div>
+    <p className="text-white/40 font-body text-xs text-center px-6 relative z-10">
+      {text || 'Media will be added soon'}
+    </p>
+  </motion.div>
+)
+
+// ============================================
+// MILESTONE CARD (within a year group)
+// ============================================
+
+interface MilestoneCardProps {
+  milestone: Milestone
+  isLastInYear: boolean
+}
+
+const MilestoneCard: React.FC<MilestoneCardProps> = ({ milestone }) => {
+  return (
+    <motion.div
+      className="relative"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+    >
+      <motion.div
+        className="relative backdrop-blur-sm rounded-2xl overflow-hidden"
+        style={{
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+        }}
+        whileHover={{
+          background: 'rgba(255, 255, 255, 0.04)',
+          borderColor: 'rgba(254, 189, 89, 0.2)',
+        }}
+      >
+        {/* Card Content */}
+        <div className="p-5">
+          <h3 className="text-lg md:text-xl font-display font-bold text-white mb-3">
+            {milestone.title}
+          </h3>
+
+          {milestone.description && (
+            <p className="text-white/60 font-body text-xs md:text-sm mb-4 leading-relaxed">
+              {milestone.description}
+            </p>
+          )}
+
+          {/* Media */}
+          <div className="mt-3">
+            {milestone.type === 'video' && (
+              <VideoPlayer
+                videoUrl={milestone.videoUrl}
+                title={milestone.title}
+                startTime={milestone.startTime}
+                endTime={milestone.endTime}
+                openInYouTube={milestone.openInYouTube}
+              />
+            )}
+
+            {milestone.type === 'video-file' && (
+              <LocalVideoPlayer
+                videoFile={milestone.videoFile}
+                title={milestone.title}
+              />
+            )}
+
+            {milestone.type === 'side-by-side' && (
+              <SideBySideVideo
+                leftVideoUrl={milestone.leftVideoUrl}
+                rightVideoUrl={milestone.rightVideoUrl}
+                title={milestone.title}
+                leftStartTime={milestone.leftStartTime}
+                leftEndTime={milestone.leftEndTime}
+                rightStartTime={milestone.rightStartTime}
+                rightEndTime={milestone.rightEndTime}
+                leftThumbnail={milestone.leftThumbnail}
+                rightThumbnail={milestone.rightThumbnail}
+              />
+            )}
+
+            {milestone.type === 'image' && (
+              milestone.imageUrl ? (
+                <motion.div
+                  className="aspect-video rounded-xl overflow-hidden shadow-2xl"
+                  whileHover={{ scale: 1.01 }}
+                >
+                  <img
+                    src={milestone.imageUrl}
+                    alt={milestone.title}
+                    className="w-full h-full object-cover"
+                  />
+                </motion.div>
+              ) : (
+                <MediaPlaceholder type="image" />
+              )
+            )}
+
+            {milestone.type === 'placeholder' && (
+              <MediaPlaceholder
+                text={milestone.placeholderText}
+                type="video"
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Hover gradient effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#FEBD59]/0 via-transparent to-transparent opacity-0 hover:opacity-5 transition-opacity duration-500 pointer-events-none" />
+      </motion.div>
+    </motion.div>
+  )
+}
+
+// ============================================
+// YEAR GROUP COMPONENT (Center Timeline)
+// ============================================
+
+interface YearGroupProps {
+  yearData: YearData
+  isLast: boolean
+}
+
+const YearGroup: React.FC<YearGroupProps> = ({ yearData }) => {
+  return (
+    <motion.div
+      className="relative mb-16"
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+    >
+      {/* Year Header - Centered */}
+      <motion.div
+        className="text-center mb-10 relative z-10"
+        initial={{ opacity: 0, scale: 0.9 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ delay: 0.1, duration: 0.4 }}
+      >
+        <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full backdrop-blur-md"
           style={{
-            background: 'linear-gradient(180deg, #FEBD59 0%, rgba(254, 189, 89, 0.4) 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
+            background: 'rgba(254, 189, 89, 0.1)',
+            border: '1px solid rgba(254, 189, 89, 0.3)',
           }}
         >
-          {data.year}
-        </h3>
-        <div
-          className="w-16 sm:w-20 h-0.5 mx-auto mt-4"
-          style={{ background: 'linear-gradient(90deg, transparent, #FEBD59, transparent)' }}
-        />
-      </div>
+          <Calendar size={16} className="text-[#FEBD59]" />
+          <h2 className="text-2xl md:text-3xl font-display font-black text-white tracking-tight">
+            {yearData.year}
+          </h2>
+        </div>
+      </motion.div>
 
-      {/* Milestones */}
-      <div className="space-y-8">
-        {data.milestones.map((milestone, mIndex) => (
-          <div key={mIndex}>
-            <MilestoneRenderer milestone={milestone} isReversed={isReversed} />
-          </div>
+      {/* Milestones Grid - Centered, smaller cards */}
+      <div className="max-w-3xl mx-auto space-y-8 pt-2 relative z-10">
+        {yearData.milestones.map((milestone, index) => (
+          <MilestoneCard
+            key={index}
+            milestone={milestone}
+            isLastInYear={index === yearData.milestones.length - 1}
+          />
         ))}
       </div>
     </motion.div>
@@ -179,104 +439,199 @@ const YearContent: React.FC<{ data: YearData; index: number; direction: number }
 }
 
 // ============================================
-// NAVIGATION ARROW BUTTON
+// ONGOING INDICATOR
 // ============================================
 
-const NavArrow: React.FC<{
-  direction: 'left' | 'right'
-  onClick: () => void
-  disabled: boolean
-}> = ({ direction, onClick, disabled }) => {
-  const Icon = direction === 'left' ? ChevronLeft : ChevronRight
-
+const OngoingIndicator: React.FC = () => {
   return (
-    <motion.button
-      onClick={onClick}
-      disabled={disabled}
-      className={`
-        w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 
-        rounded-full flex items-center justify-center
-        transition-all duration-300
-        ${disabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer hover:scale-110'}
-      `}
-      style={{
-        background: disabled ? 'rgba(255, 255, 255, 0.05)' : 'rgba(254, 189, 89, 0.15)',
-        border: `2px solid ${disabled ? 'rgba(255, 255, 255, 0.1)' : 'rgba(254, 189, 89, 0.4)'}`,
-        boxShadow: disabled ? 'none' : '0 0 30px rgba(254, 189, 89, 0.2)',
-      }}
-      whileHover={disabled ? {} : { scale: 1.1, boxShadow: '0 0 40px rgba(254, 189, 89, 0.4)' }}
-      whileTap={disabled ? {} : { scale: 0.95 }}
+    <motion.div
+      className="relative flex flex-col items-center pt-8"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ duration: 0.6 }}
     >
-      <Icon
-        size={28}
-        style={{ color: disabled ? 'rgba(255, 255, 255, 0.3)' : '#FEBD59' }}
+      {/* Short unfinished line - Centered */}
+      <motion.div
+        className="w-0.5 h-20"
+        style={{
+          background: 'linear-gradient(180deg, rgba(254, 189, 89, 0.5) 0%, transparent 100%)',
+        }}
+        initial={{ scaleY: 0, originY: 0 }}
+        whileInView={{ scaleY: 1 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ delay: 0.2, duration: 0.8 }}
       />
-    </motion.button>
+
+      {/* Animated dots at the end */}
+      <div className="flex flex-col gap-1.5 mt-2">
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            className="w-1.5 h-1.5 rounded-full bg-[#FEBD59]"
+            animate={{
+              opacity: [0.3, 1, 0.3],
+              scale: [0.8, 1, 0.8],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              delay: i * 0.2,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Text */}
+      <motion.div
+        className="text-center mt-6"
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ delay: 0.4 }}
+      >
+        <p className="text-xl md:text-2xl font-display font-bold text-[#FEBD59] italic">
+          and ongoing...
+        </p>
+        <p className="text-white/40 font-body text-xs mt-1">
+          The journey continues
+        </p>
+      </motion.div>
+    </motion.div>
   )
 }
 
 // ============================================
-// PROGRESS DOTS
+// IMPACT STATS SECTION
 // ============================================
 
-const ProgressDots: React.FC<{
-  total: number
-  current: number
-  onDotClick: (index: number) => void
-}> = ({ total, current, onDotClick }) => (
-  <div className="flex items-center justify-center gap-2 sm:gap-3 mt-8">
-    {Array.from({ length: total }).map((_, i) => (
-      <motion.button
-        key={i}
-        onClick={() => onDotClick(i)}
-        className="relative p-1"
-        whileHover={{ scale: 1.2 }}
-        whileTap={{ scale: 0.9 }}
-      >
-        <div
-          className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-all duration-300"
-          style={{
-            background: i === current ? '#FEBD59' : 'rgba(254, 189, 89, 0.25)',
-            boxShadow: i === current ? '0 0 15px rgba(254, 189, 89, 0.8)' : 'none',
-            transform: i === current ? 'scale(1.2)' : 'scale(1)',
-          }}
-        />
-      </motion.button>
-    ))}
-  </div>
-)
-
-// ============================================
-// FLOATING PARTICLE
-// ============================================
-
-const FloatingParticle: React.FC = () => {
-  const style = {
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-    width: `${1 + Math.random() * 2}px`,
-    height: `${1 + Math.random() * 2}px`,
-  }
-
+const ImpactStats: React.FC = () => {
   return (
     <motion.div
-      className="absolute rounded-full pointer-events-none"
-      style={{
-        ...style,
-        background: '#FEBD59',
-        boxShadow: '0 0 8px rgba(254, 189, 89, 0.7)',
-      }}
-      animate={{
-        y: [0, -50, 0],
-        opacity: [0.2, 0.6, 0.2],
-      }}
-      transition={{
-        duration: 12 + Math.random() * 8,
-        repeat: Infinity,
-        delay: Math.random() * 5,
-        ease: 'easeInOut',
-      }}
-    />
+      className="mt-20 max-w-5xl mx-auto"
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.6 }}
+    >
+      <div className="text-center mb-10">
+        <h4 className="text-2xl sm:text-3xl font-display font-bold text-white mb-3">
+          Impact <span className="text-[#FEBD59]">So Far</span>
+        </h4>
+        <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#FEBD59] to-transparent mx-auto rounded-full" />
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+        {impactStats.map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            className="group relative p-6 rounded-xl overflow-hidden backdrop-blur-sm"
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+            }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ delay: index * 0.1, duration: 0.5 }}
+            whileHover={{
+              background: 'rgba(255, 255, 255, 0.04)',
+              borderColor: 'rgba(254, 189, 89, 0.2)',
+            }}
+          >
+            <div className="text-center relative z-10">
+              <motion.span
+                className="block text-4xl font-display font-black text-white group-hover:text-[#FEBD59] transition-colors duration-300 mb-1"
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ delay: 0.3 + (index * 0.1), type: 'spring', stiffness: 150 }}
+              >
+                {stat.value}
+              </motion.span>
+              <p className="text-white/50 group-hover:text-[#FEBD59]/70 transition-colors duration-300 font-body text-xs font-medium uppercase tracking-widest">
+                {stat.label}
+              </p>
+            </div>
+
+            {/* Hover glow */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#FEBD59]/0 via-transparent to-transparent opacity-0 group-hover:opacity-10 transition-opacity duration-500" />
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Collaborations Ticker */}
+      <motion.div
+        className="relative rounded-xl overflow-hidden backdrop-blur-sm"
+        style={{
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+        }}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ delay: 0.5 }}
+      >
+        {/* Header - centered on top */}
+        <div className="flex justify-center pt-4 pb-2">
+          <div className="bg-[#FEBD59]/10 border border-[#FEBD59]/20 rounded-lg px-4 py-2 backdrop-blur-md">
+            <span className="text-[#FEBD59] font-display font-bold text-xs tracking-wide">
+              COLLABORATIONS
+            </span>
+          </div>
+        </div>
+
+        {/* Ticker */}
+        <div className="relative overflow-hidden">
+          {/* Fade edges */}
+          <div className="absolute left-0 top-0 bottom-0 w-12 md:w-20 bg-gradient-to-r from-black to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-12 md:w-20 bg-gradient-to-l from-black to-transparent z-10 pointer-events-none" />
+
+          <div
+            className="ticker-container flex items-center py-4"
+          >
+            {/* First set of logos */}
+            {collaboratedBrands.map((brand, index) => (
+              <div
+                key={`set1-${index}`}
+                className="flex items-center justify-center flex-shrink-0"
+                style={{ marginLeft: '32px', marginRight: '32px' }}
+              >
+                <img
+                  src={brand.logo}
+                  alt={brand.name}
+                  className="object-contain opacity-90 hover:opacity-100 transition-opacity duration-300"
+                  style={{
+                    height: brand.name === 'Edventure Park' ? '70px' : '55px',
+                    width: 'auto'
+                  }}
+                />
+              </div>
+            ))}
+            {/* Duplicate set for seamless loop */}
+            {collaboratedBrands.map((brand, index) => (
+              <div
+                key={`set2-${index}`}
+                className="flex items-center justify-center flex-shrink-0"
+                style={{ marginLeft: '32px', marginRight: '32px' }}
+              >
+                <img
+                  src={brand.logo}
+                  alt={brand.name}
+                  className="object-contain opacity-90 hover:opacity-100 transition-opacity duration-300"
+                  style={{
+                    height: brand.name === 'Edventure Park' ? '70px' : '55px',
+                    width: 'auto'
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </motion.div>
+    </motion.div>
   )
 }
 
@@ -285,131 +640,86 @@ const FloatingParticle: React.FC = () => {
 // ============================================
 
 const JourneySection: React.FC = () => {
-  const [activeIndex, setActiveIndex] = useState(0)
-  const [direction, setDirection] = useState(0)
-  const totalYears = journeyData.length
-
-  const goToNext = (): void => {
-    if (activeIndex < totalYears - 1) {
-      setDirection(1)
-      setActiveIndex(activeIndex + 1)
-    }
-  }
-
-  const goToPrev = (): void => {
-    if (activeIndex > 0) {
-      setDirection(-1)
-      setActiveIndex(activeIndex - 1)
-    }
-  }
-
-  const goToIndex = (index: number): void => {
-    setDirection(index > activeIndex ? 1 : -1)
-    setActiveIndex(index)
-  }
-
-  // Handle swipe/drag gestures
-  const handleDragEnd = (event: any, info: any): void => {
-    const swipeThreshold = 50
-    if (info.offset.x > swipeThreshold) {
-      goToPrev()
-    } else if (info.offset.x < -swipeThreshold) {
-      goToNext()
-    }
-  }
-
-  // Handle keyboard navigation
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') goToNext()
-      if (e.key === 'ArrowLeft') goToPrev()
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [activeIndex])
+  const sectionRef = useRef(null)
+  const isInView = useInView(sectionRef, { once: true, amount: 0 })
 
   return (
     <section
+      ref={sectionRef}
       id="journey"
-      className="relative bg-black py-20 sm:py-24 lg:py-32"
+      className="relative bg-black py-20 lg:py-32 overflow-hidden"
     >
-      {/* Background Particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <FloatingParticle key={i} />
-        ))}
-      </div>
-
-      {/* Ambient Glow */}
-      <div
+      {/* Background ambient glow */}
+      <motion.div
         className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-30"
         style={{ background: 'radial-gradient(circle, rgba(254, 189, 89, 0.15), transparent 70%)' }}
+        animate={isInView ? { scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] } : {}}
+        transition={{ duration: 12, repeat: Infinity }}
       />
-      <div
-        className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl pointer-events-none opacity-20"
-        style={{ background: 'radial-gradient(circle, rgba(254, 189, 89, 0.1), transparent 70%)' }}
+      <motion.div
+        className="absolute bottom-1/3 right-1/4 w-80 h-80 rounded-full blur-3xl pointer-events-none opacity-20"
+        style={{ background: 'radial-gradient(circle, rgba(254, 189, 89, 0.12), transparent 70%)' }}
+        animate={isInView ? { scale: [1, 1.4, 1], opacity: [0.15, 0.3, 0.15] } : {}}
+        transition={{ duration: 15, repeat: Infinity, delay: 3 }}
       />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
-        <motion.div
-          className="text-center mb-12 sm:mb-16 lg:mb-20"
+        <SectionHeader title="MY" gradientText="JOURNEY" isInView={isInView} />
+
+        {/* Subtitle */}
+        <motion.p
+          className="text-center text-white/50 font-body text-sm sm:text-base max-w-2xl mx-auto mb-16"
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ delay: 0.3 }}
         >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-black tracking-tight">
-            <span className="text-white">MY </span>
-            <span style={{ color: '#FEBD59' }}>JOURNEY</span>
-          </h2>
-          <p className="mt-4 text-white/50 font-body text-sm sm:text-base max-w-md mx-auto">
-            Navigate using arrows, keyboard, or swipe on mobile
-          </p>
-        </motion.div>
+          A timeline of growth, creativity, and milestones that shaped who I am today.
+        </motion.p>
 
-        {/* Carousel Container */}
-        <div className="max-w-6xl mx-auto">
-          {/* Navigation Row */}
-          <div className="flex items-center justify-between gap-4 sm:gap-6 lg:gap-8">
-            {/* Left Arrow */}
-            <NavArrow direction="left" onClick={goToPrev} disabled={activeIndex === 0} />
+        {/* Timeline Container with Continuous Vertical Line */}
+        <div className="max-w-6xl mx-auto relative">
+          {/* CONTINUOUS VERTICAL LINE - Runs through entire timeline */}
+          <motion.div
+            className="absolute left-1/2 -translate-x-1/2 w-0.5 z-0"
+            style={{
+              top: '80px',
+              bottom: '120px',
+              background: 'linear-gradient(180deg, rgba(254, 189, 89, 0.6) 0%, rgba(254, 189, 89, 0.4) 50%, rgba(254, 189, 89, 0.3) 100%)',
+            }}
+            initial={{ scaleY: 0, transformOrigin: 'top' }}
+            whileInView={{ scaleY: 1 }}
+            viewport={{ once: true, amount: 0.1 }}
+            transition={{ delay: 0.5, duration: 2, ease: 'easeOut' }}
+          />
 
-            {/* Content Area with Swipe Support */}
-            <motion.div
-              className="flex-1 min-w-0 overflow-hidden cursor-grab active:cursor-grabbing"
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={handleDragEnd}
-            >
-              <AnimatePresence mode="wait" custom={direction}>
-                <YearContent
-                  key={activeIndex}
-                  data={journeyData[activeIndex]}
-                  index={activeIndex}
-                  direction={direction}
-                />
-              </AnimatePresence>
-            </motion.div>
+          {/* Year Groups */}
+          {journeyData.map((yearData, index) => (
+            <YearGroup
+              key={yearData.year}
+              yearData={yearData}
+              isLast={index === journeyData.length - 1}
+            />
+          ))}
 
-            {/* Right Arrow */}
-            <NavArrow direction="right" onClick={goToNext} disabled={activeIndex === totalYears - 1} />
-          </div>
-
-          {/* Progress Dots */}
-          <ProgressDots total={totalYears} current={activeIndex} onDotClick={goToIndex} />
-
-          {/* Year Counter */}
-          <div className="text-center mt-6">
-            <span className="text-white/40 font-body text-sm">
-              <span className="text-[#FEBD59] font-semibold">{String(activeIndex + 1).padStart(2, '0')}</span>
-              <span className="mx-2">/</span>
-              <span>{String(totalYears).padStart(2, '0')}</span>
-            </span>
-          </div>
+          {/* Ongoing Indicator */}
+          <OngoingIndicator />
         </div>
+
+        {/* Impact Stats */}
+        <ImpactStats />
       </div>
+
+      {/* Bottom gradient line */}
+      <motion.div
+        className="absolute bottom-0 left-0 w-full h-px"
+        style={{
+          background: 'linear-gradient(90deg, transparent 0%, rgba(254, 189, 89, 0.5) 50%, transparent 100%)',
+        }}
+        initial={{ opacity: 0 }}
+        animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+        transition={{ delay: 1 }}
+      />
     </section>
   )
 }
