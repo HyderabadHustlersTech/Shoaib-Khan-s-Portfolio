@@ -49,7 +49,7 @@ const HeroSection: React.FC = () => {
 
       {/* Ambient Light Orbs - Reduced blur for performance */}
       <motion.div
-        className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-2xl"
+        className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-2xl pointer-events-none"
         style={{ background: 'radial-gradient(circle, rgba(254,189,89,0.1) 0%, transparent 70%)' }}
         animate={{
           scale: [1, 1.2, 1],
@@ -59,7 +59,7 @@ const HeroSection: React.FC = () => {
         transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-2xl"
+        className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-2xl pointer-events-none"
         style={{ background: 'radial-gradient(circle, rgba(255,157,0,0.08) 0%, transparent 70%)' }}
         animate={{
           scale: [1, 1.3, 1],
