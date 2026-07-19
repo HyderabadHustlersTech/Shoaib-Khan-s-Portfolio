@@ -70,7 +70,7 @@ export default function Hero() {
         <div className="hero-fade flex items-center justify-between border-b border-line pb-4 font-mono text-[0.65rem] uppercase tracking-[0.22em] text-cream-dim sm:text-xs">
           <span>Hyderabad, India</span>
           <span className="hidden sm:inline">Content · Film · Startups</span>
-          <span>Since 2017</span>
+          <span>Since 2003</span>
         </div>
 
         {/* Main composition */}
