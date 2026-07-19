@@ -76,7 +76,7 @@ export default function Hero() {
         {/* Main composition */}
         <div className="grid flex-1 grid-cols-1 items-center gap-8 py-10 lg:grid-cols-12 lg:gap-6 lg:py-6">
           {/* Name + copy */}
-          <div className="order-2 lg:order-1 lg:col-span-7">
+          <div className="order-2 text-center lg:order-1 lg:col-span-7 lg:text-left">
             <h1 className="font-display font-extrabold leading-[0.82] tracking-[-0.045em]">
               <span className="block overflow-hidden">
                 <span className="line-inner block text-[clamp(3.5rem,17vw,12rem)] uppercase text-cream">
@@ -90,7 +90,7 @@ export default function Hero() {
               </span>
             </h1>
 
-            <p className="hero-fade mt-6 max-w-xl text-base leading-relaxed text-cream-dim sm:text-lg">
+            <p className="hero-fade mx-auto mt-6 max-w-xl text-base leading-relaxed text-cream-dim lg:mx-0 sm:text-lg">
               Content Creator, Director, Writer, Video Editor, and Co-Founder of{" "}
               <span className="font-semibold italic text-gold">Hyderabad Hustlers</span>
             </p>

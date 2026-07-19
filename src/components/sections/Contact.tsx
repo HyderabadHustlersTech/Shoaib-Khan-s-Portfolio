@@ -9,7 +9,7 @@ export default function Contact() {
   return (
     <section
       id="contact"
-      className="relative mx-auto max-w-[1400px] scroll-mt-20 px-5 py-24 sm:px-8 sm:py-32"
+      className="relative mx-auto max-w-[1400px] scroll-mt-20 overflow-hidden px-5 py-24 sm:px-8 sm:py-32"
     >
       {/* Ambient glow */}
       <div

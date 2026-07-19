@@ -71,7 +71,7 @@ export default function Intro() {
   return (
     <div
       ref={root}
-      className="fixed inset-0 z-[120] flex flex-col justify-between bg-ink-deep px-6 py-7 sm:px-10 sm:py-9"
+      className="fixed inset-0 z-[120] flex flex-col justify-between overflow-hidden bg-ink-deep px-6 py-7 sm:px-10 sm:py-9"
     >
       <SignatureMark className="h-16 self-start sm:h-24" />
 
@@ -96,7 +96,7 @@ export default function Intro() {
           <span className="font-mono text-xs uppercase tracking-[0.25em] text-cream-faint">
             2017 — Now
           </span>
-          <span className="font-display text-[clamp(4rem,20vw,11rem)] font-extrabold leading-none tracking-tighter text-cream tabular-nums">
+          <span className="font-display text-[clamp(2.75rem,13vw,11rem)] font-extrabold leading-none tracking-tighter text-cream tabular-nums">
             {String(count).padStart(2, "0")}
             <span className="text-gold">%</span>
           </span>
