@@ -1,198 +1,168 @@
-import React, { useState, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X } from 'lucide-react'
-import { TIMING } from '../constants/config'
-import { useActiveSection } from '../hooks/useActiveSection'
-import { useIsAtTop } from '../hooks/useScrollPosition'
+"use client";
 
-const Navbar: React.FC = () => {
-  const isAtTop = useIsAtTop()
-  const activeSection = useActiveSection()
-  const [isNavOpen, setIsNavOpen] = useState(false)
+import { useEffect, useState } from "react";
+import { navSections, socials } from "@/lib/content";
+import { scrollToSection, getLenis } from "@/lib/lenis";
+import { LinkedIn, Instagram, Menu, Close, ArrowUpRight } from "@/components/ui/Icons";
+import SignatureMark from "@/components/ui/SignatureMark";
 
-  const navItems = [
-    { name: 'About', href: '#about' },
-    { name: 'Journey', href: '#journey' },
-    { name: 'Experience', href: '#experience' },
-    { name: 'Contact', href: '#contact' }
-  ]
+export default function Navbar() {
+  const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [active, setActive] = useState("hero");
 
-  const scrollToSection = useCallback((href: string) => {
-    const element = document.querySelector(href)
-    if (element) {
-      setIsNavOpen(false)
+  // Bar tint after leaving the hero
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-      // Small delay to allow menu to close first
-      setTimeout(() => {
-        // Use native smooth scroll for better performance
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, TIMING.MENU_CLOSE_DELAY)
+  // Scroll-spy
+  useEffect(() => {
+    const ids = ["hero", ...navSections.map((s) => s.id)];
+    const els = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => !!el);
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) setActive(e.target.id);
+      },
+      { rootMargin: "-45% 0px -45% 0px", threshold: 0 }
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
+  // Lock scroll while the mobile menu is open
+  useEffect(() => {
+    if (open) {
+      getLenis()?.stop();
+      document.documentElement.style.overflow = "hidden";
+    } else {
+      getLenis()?.start();
+      document.documentElement.style.overflow = "";
     }
-  }, [])
+    return () => {
+      document.documentElement.style.overflow = "";
+    };
+  }, [open]);
+
+  const go = (id: string) => {
+    setOpen(false);
+    // let the menu begin closing before scroll starts
+    setTimeout(() => scrollToSection(`#${id}`), 80);
+  };
 
   return (
     <>
-      {/* Desktop Navbar - Pill shaped with width animation */}
-      <div className="hidden lg:flex fixed top-6 left-0 right-0 z-50 justify-center px-4">
-        <motion.nav
-          initial={{ y: -100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          className="w-full max-w-5xl"
-        >
-          <motion.div
-            animate={{
-              width: isAtTop ? '100%' : '85%',
-            }}
-            transition={{
-              duration: TIMING.NAVBAR_TRANSITION_DURATION / 1000,
-              ease: [0.4, 0, 0.2, 1]
-            }}
-            className="rounded-full px-6 py-2 bg-black/90 backdrop-blur-xl shadow-2xl mx-auto"
-            style={{
-              border: '1px solid rgba(254, 189, 89, 0.3)',
-              boxShadow: '0 25px 50px -12px rgba(254, 189, 89, 0.2)',
-              willChange: 'width'
-            }}
+      <header
+        className={`fixed inset-x-0 top-0 z-[100] transition-colors duration-500 ${
+          scrolled ? "bg-ink/70 backdrop-blur-md" : "bg-transparent"
+        }`}
+      >
+        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-4 sm:px-8 sm:py-5">
+          <button
+            onClick={() => go("hero")}
+            className="group flex items-center"
+            aria-label="Shoaib Khan — back to top"
           >
-            <div className="flex items-center justify-between gap-1.5">
-              {navItems.map((item) => {
-                const isActive = activeSection === item.href.substring(1)
-                return (
-                  <motion.button
-                    key={item.name}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => scrollToSection(item.href)}
-                    className="relative px-5 lg:px-7 py-3 rounded-full font-body font-semibold text-base transition-all duration-300"
-                    style={{ color: isActive ? '#000000' : '#FFFFFF', willChange: 'transform' }}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeTab"
-                        className="absolute inset-0 rounded-full shadow-lg"
-                        style={{
-                          backgroundColor: '#FEBD59',
-                          boxShadow: '0 10px 15px -3px rgba(254, 189, 89, 0.3)',
-                          willChange: 'transform'
-                        }}
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                      />
-                    )}
-                    <span className="relative z-10">{item.name}</span>
-                  </motion.button>
-                )
-              })}
-            </div>
-          </motion.div>
-        </motion.nav>
-      </div>
+            <SignatureMark className="h-10 transition-opacity duration-300 group-hover:opacity-75 sm:h-12" />
+          </button>
 
-      {/* Mobile/Tablet - Hamburger Menu */}
-      <div className="lg:hidden">
-        <motion.div
-          initial={{ y: -100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="fixed top-4 right-4 sm:top-6 sm:right-6 z-50"
-        >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsNavOpen(!isNavOpen)}
-            aria-label={isNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
-            aria-expanded={isNavOpen}
-            className="relative p-3 sm:p-4 rounded-full bg-black/90 backdrop-blur-xl shadow-xl"
-            style={{
-              border: '1px solid rgba(254, 189, 89, 0.4)',
-              boxShadow: '0 20px 25px -5px rgba(254, 189, 89, 0.25)',
-              willChange: 'transform'
-            }}
+          {/* Desktop nav */}
+          <nav className="hidden items-center gap-1 md:flex">
+            {navSections.map((s) => {
+              const isActive = active === s.id;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => go(s.id)}
+                  className="group relative px-4 py-2 font-mono text-xs uppercase tracking-[0.15em] transition-colors"
+                  data-cursor-hover
+                >
+                  <span className={isActive ? "text-gold" : "text-cream/85 group-hover:text-cream"}>
+                    <span className={isActive ? "text-gold/70" : "text-cream/55"}>{s.index}</span> {s.label}
+                  </span>
+                  <span
+                    className={`absolute inset-x-4 bottom-1 h-px origin-left bg-gold transition-transform duration-300 ${
+                      isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                    }`}
+                  />
+                </button>
+              );
+            })}
+            <a
+              href={`mailto:shoaib@hyderabadhustlers.com`}
+              className="ml-3 flex items-center gap-1 rounded-full border border-gold/40 px-4 py-2 font-mono text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-ink"
+              data-cursor-hover
+            >
+              Connect <ArrowUpRight className="h-3.5 w-3.5" />
+            </a>
+          </nav>
+
+          {/* Mobile toggle */}
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-line text-cream md:hidden"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
           >
-            <div
-              className="absolute inset-0 rounded-full"
-              style={{ background: 'linear-gradient(to right, rgba(254, 189, 89, 0.15), rgba(255, 157, 0, 0.15))' }}
-            />
-            <motion.div
-              animate={{ rotate: isNavOpen ? 90 : 0 }}
-              transition={{ duration: 0.3 }}
-              className="relative z-10"
-              style={{ willChange: 'transform' }}
-            >
-              {isNavOpen ? (
-                <X size={24} className="sm:w-7 sm:h-7" style={{ color: '#FEBD59' }} strokeWidth={2.5} />
-              ) : (
-                <Menu size={24} className="sm:w-7 sm:h-7" style={{ color: '#FEBD59' }} strokeWidth={2.5} />
-              )}
-            </motion.div>
-          </motion.button>
-        </motion.div>
+            {open ? <Close className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+      </header>
 
-        <AnimatePresence>
-          {isNavOpen && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
-              onClick={() => setIsNavOpen(false)}
+      {/* Mobile full-screen menu */}
+      <div
+        className={`fixed inset-0 z-[99] flex flex-col bg-ink-deep px-6 pb-10 pt-24 transition-[opacity,transform] duration-500 md:hidden ${
+          open ? "pointer-events-auto opacity-100" : "pointer-events-none translate-y-4 opacity-0"
+        }`}
+      >
+        <nav className="flex flex-1 flex-col justify-center gap-2">
+          {navSections.map((s, i) => (
+            <button
+              key={s.id}
+              onClick={() => go(s.id)}
+              className="group flex items-baseline gap-4 border-b border-line/60 py-4 text-left"
+              style={{ transitionDelay: `${open ? i * 60 + 120 : 0}ms` }}
             >
-              <motion.div
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="absolute right-0 top-0 bottom-0 w-[85vw] max-w-80 bg-black/95 backdrop-blur-sm shadow-2xl" // Reduced blur
-                style={{ borderLeft: '1px solid rgba(254, 189, 89, 0.3)', willChange: 'transform' }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex flex-col items-start p-8 pt-24 space-y-4">
-                  {navItems.map((item, index) => {
-                    const isActive = activeSection === item.href.substring(1)
-                    return (
-                      <motion.button
-                        key={item.name}
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => scrollToSection(item.href)}
-                        className="w-full text-left px-6 py-4 rounded-xl font-body font-semibold text-lg transition-all duration-300"
-                        style={isActive
-                          ? {
-                            backgroundColor: '#FEBD59',
-                            color: '#000000',
-                            boxShadow: '0 10px 15px -3px rgba(254, 189, 89, 0.3)'
-                          }
-                          : {
-                            color: '#FFFFFF',
-                            backgroundColor: 'transparent'
-                          }
-                        }
-                        onMouseEnter={(e) => {
-                          if (!isActive) {
-                            e.currentTarget.style.backgroundColor = 'rgba(254, 189, 89, 0.1)'
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isActive) {
-                            e.currentTarget.style.backgroundColor = 'transparent'
-                          }
-                        }}
-                      >
-                        {item.name}
-                      </motion.button>
-                    )
-                  })}
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <span className="font-mono text-xs text-gold">{s.index}</span>
+              <span className="font-display text-5xl font-extrabold tracking-tight text-cream transition-colors group-hover:text-gold">
+                {s.label}
+              </span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="flex items-center justify-between">
+          <div className="flex gap-3">
+            <a
+              href={socials.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="LinkedIn"
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-line text-cream"
+            >
+              <LinkedIn className="h-5 w-5" />
+            </a>
+            <a
+              href={socials.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-line text-cream"
+            >
+              <Instagram className="h-5 w-5" />
+            </a>
+          </div>
+          <span className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-cream-faint">
+            Hyderabad, IN
+          </span>
+        </div>
       </div>
     </>
-  )
+  );
 }
-
-export default Navbar
