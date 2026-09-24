@@ -7,19 +7,31 @@ import { introWords, hhLogo } from "@/lib/content";
 import SignatureMark from "@/components/ui/SignatureMark";
 
 /**
- * Filmic "leader" intro. Each role liner holds long enough to read, all three
- * complete (the last paired with the Hyderabad Hustlers logo), then the panel
- * wipes up. Content lives beneath in the DOM the whole time (SEO-safe); skipped
+ * Filmic "leader" intro. Each role liner holds long enough to read, every one
+ * completes (the last — "Co-Founder of" — paired with the Hyderabad Hustlers
+ * logo), then the panel wipes up. Content lives beneath in the DOM the whole time (SEO-safe); skipped
  * instantly under reduced-motion.
+ *
+ * Plays on every full page load / refresh (owner's requirement). Only an
+ * in-site navigation back to the landing page (e.g. from /journey) skips it,
+ * because this module — and its flag — survive client-side route changes.
  */
+let playedThisLoad = false;
+
 export default function Intro() {
   const root = useRef<HTMLDivElement>(null);
   const [count, setCount] = useState(0);
   const [word, setWord] = useState(0);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState(() => playedThisLoad);
+  const skipped = useRef(done);
   const isLast = word === introWords.length - 1;
 
   useEffect(() => {
+    if (skipped.current) {
+      window.dispatchEvent(new Event("intro-done"));
+      return;
+    }
+
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
       const id = requestAnimationFrame(() => setDone(true));
@@ -50,6 +62,7 @@ export default function Intro() {
       document.documentElement.style.overflow = "";
       getLenis()?.start();
       setDone(true);
+      playedThisLoad = true;
       window.dispatchEvent(new Event("intro-done"));
     });
 
@@ -75,8 +88,8 @@ export default function Intro() {
     >
       <SignatureMark className="h-16 self-start sm:h-24" />
 
-      <div className="flex flex-1 items-center">
-        <div key={word} className="intro-word flex flex-wrap items-center gap-x-5 gap-y-1">
+      <div className="flex flex-1 items-center justify-center md:justify-start">
+        <div key={word} className="intro-word flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-center md:justify-start md:text-left">
           <p className="max-w-3xl font-display text-[clamp(1.9rem,6.5vw,4.5rem)] font-extrabold uppercase leading-[0.95] tracking-tight text-cream">
             {introWords[word]}
           </p>
@@ -93,8 +106,8 @@ export default function Intro() {
 
       <div>
         <div className="mb-4 flex items-end justify-between">
-          <span className="font-mono text-xs uppercase tracking-[0.25em] text-cream-faint">
-            2017 — Now
+          <span className="font-mono text-sm font-bold uppercase tracking-[0.25em] text-cream-dim sm:text-base">
+            Since 2003
           </span>
           <span className="font-display text-[clamp(2.75rem,13vw,11rem)] font-extrabold leading-none tracking-tighter text-cream tabular-nums">
             {String(count).padStart(2, "0")}

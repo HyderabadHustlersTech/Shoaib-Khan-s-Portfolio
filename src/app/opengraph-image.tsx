@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { signatureDataUri } from "@/lib/og-signature";
 
-export const alt = "Shoaib Khan — Content Creator, Director & Video Editor";
+export const alt = "Shoaib Khan, Content Creator, Director & Video Editor";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

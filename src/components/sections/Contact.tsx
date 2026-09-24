@@ -18,7 +18,7 @@ export default function Contact() {
         style={{ background: "radial-gradient(circle, rgba(254,189,89,0.1), transparent 65%)" }}
       />
 
-      <SectionHeader index="04" label="Say Hello">
+      <SectionHeader>
         Get In <span className="text-gold">Touch</span>
       </SectionHeader>
 

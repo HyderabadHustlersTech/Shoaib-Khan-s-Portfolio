@@ -14,6 +14,15 @@ export function getLenis() {
   return instance;
 }
 
+/** Smooth-scroll to the top of whichever page is showing. */
+export function scrollToTop() {
+  if (instance) {
+    instance.scrollTo(0, { duration: 1.4 });
+  } else if (typeof window !== "undefined") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
 /** Smooth-scroll to a section by CSS selector, with a graceful native fallback. */
 export function scrollToSection(target: string) {
   if (instance) {

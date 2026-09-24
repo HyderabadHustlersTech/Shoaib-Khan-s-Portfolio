@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Milestone } from "@/lib/content";
 import {
   getYouTubeVideoId,
@@ -83,14 +83,40 @@ function YouTubePlayer({
   );
 }
 
-function LocalVideo({ videoFile, title }: { videoFile: string; title: string }) {
+/**
+ * Muted looping clip that downloads nothing until it nears the viewport, then
+ * plays while visible and pauses when scrolled away (keeps a 3 MB mp4 off the
+ * initial page load). The poster frame shows in the meantime.
+ */
+function LocalVideo({ videoFile, title, poster }: { videoFile: string; title: string; poster?: string }) {
+  const ref = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          if (!video.getAttribute("src")) video.src = videoFile;
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      },
+      { rootMargin: "300px 0px" }
+    );
+    io.observe(video);
+    return () => io.disconnect();
+  }, [videoFile]);
+
   return (
     <div className="aspect-video w-full overflow-hidden rounded-xl bg-black">
       <video
-        src={videoFile}
+        ref={ref}
         title={title}
+        poster={poster}
+        preload="none"
         className="h-full w-full object-cover"
-        autoPlay
         loop
         muted
         playsInline
@@ -134,14 +160,14 @@ export default function MilestoneMedia({ milestone }: { milestone: Milestone }) 
         <div className="grid grid-cols-2 gap-2">
           <YouTubePlayer
             videoUrl={milestone.leftVideoUrl}
-            title={`${milestone.title} — Part 1`}
+            title={`${milestone.title} (Part 1)`}
             startTime={milestone.leftStartTime}
             endTime={milestone.leftEndTime}
             customThumbnail={milestone.leftThumbnail}
           />
           <YouTubePlayer
             videoUrl={milestone.rightVideoUrl}
-            title={`${milestone.title} — Part 2`}
+            title={`${milestone.title} (Part 2)`}
             startTime={milestone.rightStartTime}
             endTime={milestone.rightEndTime}
             customThumbnail={milestone.rightThumbnail}
@@ -149,7 +175,9 @@ export default function MilestoneMedia({ milestone }: { milestone: Milestone }) 
         </div>
       );
     case "video-file":
-      return <LocalVideo videoFile={milestone.videoFile} title={milestone.title} />;
+      return (
+        <LocalVideo videoFile={milestone.videoFile} title={milestone.title} poster={milestone.poster} />
+      );
     case "image":
       return <ImageMedia src={milestone.imageUrl} alt={milestone.title} />;
     case "placeholder":

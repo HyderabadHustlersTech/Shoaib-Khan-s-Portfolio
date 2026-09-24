@@ -9,9 +9,9 @@ export const site = {
   fullName: "Mohammed Shoaib Choudry",
   title: "Shoaib Khan - Content Creator & Entrepreneur",
   description:
-    "Shoaib Khan — Content Creator, Director & Video Editor from Hyderabad, and Co-Founder of Hyderabad Hustlers. A decade of storytelling across film, viral content & startups.",
+    "Shoaib Khan is a content creator, director and video editor from Hyderabad, and Co-Founder of Hyderabad Hustlers. A decade of storytelling in film and startups.",
   ogDescription:
-    "Content Creator, Director & Video Editor from Hyderabad, and Co-Founder of Hyderabad Hustlers — a decade of storytelling across film, viral content & startups.",
+    "Content Creator, Director & Video Editor from Hyderabad, and Co-Founder of Hyderabad Hustlers. A decade of storytelling across film, viral content & startups.",
   keywords:
     "Shoaib Khan, Mohammed Shoaib Choudry, Content Creator, Director, Writer, Video Editor, Filmmaker, Hyderabad, Hyderabad Hustlers, HH, Entrepreneur, Podcast, beingashoaib",
   url: "https://beingashoaib.com",
@@ -21,22 +21,33 @@ export const site = {
 } as const;
 
 export const socials = {
-  linkedin: "https://www.linkedin.com/in/shoaibkhan",
+  linkedin: "https://www.linkedin.com/in/beingashoaib/",
   instagram: "https://www.instagram.com/beingashoaib",
+  x: "https://x.com/beingashoaib",
 } as const;
 
-export type NavSection = {
-  id: string;
+/** `/#id` = a section on the landing page (smooth-scrolled when already there); `/path` = a page. */
+export type NavItem = {
+  href: string;
   label: string;
   index: string;
 };
 
-export const navSections: NavSection[] = [
-  { id: "about", label: "About", index: "01" },
-  { id: "journey", label: "Journey", index: "02" },
-  { id: "experience", label: "Experience", index: "03" },
-  { id: "contact", label: "Contact", index: "04" },
+export const navItems: NavItem[] = [
+  { href: "/journey", label: "My Journey", index: "01" },
+  { href: "/#experience", label: "Experience", index: "02" },
+  { href: "/#contact", label: "Contact", index: "03" },
 ];
+
+/** Separate page blending About + the Journey reel. */
+export const journeyPage = {
+  path: "/journey",
+  title: "My Journey",
+  intro: "The story behind the lens, from first takes in 2017 to Hyderabad Hustlers.",
+  metaTitle: "My Journey - Shoaib Khan",
+  metaDescription:
+    "The story of Shoaib Khan, from viral sketches and short films in 2017 to co-founding Hyderabad Hustlers. A timeline of growth, creativity, and milestones.",
+} as const;
 
 export const hero = {
   name: "SHOAIB KHAN",
@@ -44,20 +55,22 @@ export const hero = {
   cofounderOf: "Hyderabad Hustlers",
   portrait: "/assets/skpic.webp",
   connectLabel: "Let's Connect",
+  journeyLabel: "Explore My Journey",
 } as const;
 
-/** Splash/intro word cycle from the original site. */
-export const introWords = ["Content Creator", "Entrepreneur", "Co-Founder of"] as const;
+/** Splash/intro word cycle ("Contentpreneur" replaces the original's "Content Creator" + "Entrepreneur"). */
+export const introWords = ["Contentpreneur", "Co-Founder of"] as const;
 export const hhLogo = "/assets/hhlogo.webp";
 export const signature = "/assets/Shoaib Khan Signature.webp";
 
 /* ---------------------------------- ABOUT --------------------------------- */
 
 export const about = {
-  portrait: "/assets/skback.webp",
+  portrait: "/assets/skback.webp", // 2400w
+  portraitSmall: "/assets/skback-1200.webp", // 1200w, for phones
   paragraphs: [
     "I’m a content creator, director, writer, video editor, and entrepreneur from Hyderabad, and I have spent the last decade experimenting with storytelling in every form - from viral YouTube videos and short films to stand-up comedy and startup-focused podcasts.",
-    "I started my journey in 2017, inspired by platforms like The Baigan Vines, creating sketches and short films that quickly went viral and gave me early recognition for my creativity. Over time, my love for video editing and content creation evolved into a mission-driven journey, experimenting with formats like short films, viral clips, and even stand-up comedy, all while consistently sharpening my editing craft.",
+    "I started my journey in 2017 with one thought: \"If The Baigan Vines can do such things in Hyderabad content creation, why not me?\" That spark had me creating sketches and short films that quickly went viral and gave me early recognition for my creativity. Over time, my love for video editing and content creation evolved into a mission-driven journey, experimenting with formats like short films, viral clips, and even stand-up comedy, all while consistently sharpening my editing craft.",
     "In 2023, I stepped into entrepreneurship, joining Edventure Park and later BioReform, where I gained hands on exposure to startups and innovation. That phase eventually led me to start Hyderabad Hustlers (HH) in December 2023 - a podcast platform built to tell raw, authentic stories of entrepreneurs. What started as a simple experiment soon grew into a full-fledged movement: direct incubation, 50+ entrepreneur stories, a 1M+ audience, brand collaborations, and even partnering with August Fest.",
     "Today, I continue to balance my creative storytelling and entrepreneurial drive, working with a clear purpose:",
   ],
@@ -127,6 +140,8 @@ export interface VideoFileMilestone {
   title: string;
   description?: string;
   videoFile: string;
+  /** still frame shown until the clip scrolls near (keeps the mp4 off the initial load) */
+  poster?: string;
 }
 export type Milestone =
   | VideoMilestone
@@ -173,8 +188,8 @@ export const journeyData: YearData[] = [
     milestones: [
       {
         type: "video",
-        title: "One of the Craziest Videos",
-        description: "Produced one of my craziest videos.",
+        title: "My Most Cinematic Video",
+        description: "Produced my most cinematic video yet.",
         videoUrl: "https://www.youtube.com/watch?v=gYuMT0itw9g",
       },
     ],
@@ -187,6 +202,7 @@ export const journeyData: YearData[] = [
         title: "E-Sports Phase",
         description: "Dedicated time towards E-Sports.",
         videoFile: "/assets/esportsphase.mp4",
+        poster: "/assets/esportsphase-poster.webp",
       },
     ],
   },
@@ -306,7 +322,6 @@ export const experiences: Experience[] = [
     logo: "/assets/evp.webp",
   },
   { company: "BioReform", role: "Former Content & Media Creator", logo: "/assets/bioreform.webp" },
-  { company: "Freelancing", role: "Video Editing Freelancer" },
 ];
 
 /* -------------------------------- CONTACT --------------------------------- */
@@ -339,8 +354,49 @@ export const contactCta = {
   href: "https://wa.me/918790687245",
 };
 
+/* ---------------------------------- FAQ ----------------------------------- */
+/* Rendered visibly (sections/FAQ.tsx) AND as FAQPage JSON-LD (layout.tsx) —
+   answer engines quote this format. Answers are drawn from the copy above. */
+
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+export const faqs: FaqItem[] = [
+  {
+    question: "Who is Shoaib Khan?",
+    answer:
+      "Shoaib Khan (Mohammed Shoaib Choudry) is a content creator, director, writer, video editor, and entrepreneur from Hyderabad, and the CEO & Co-Founder of Hyderabad Hustlers. He has spent the last decade experimenting with storytelling in every form - from viral YouTube videos and short films to stand-up comedy and startup-focused podcasts.",
+  },
+  {
+    question: "What is Hyderabad Hustlers?",
+    answer:
+      "Hyderabad Hustlers (HH) is a podcast platform built to tell raw, authentic stories of entrepreneurs, started by Shoaib Khan in December 2023. What started as a simple experiment soon grew into a full-fledged movement: direct incubation, 50+ entrepreneur stories, a 1M+ audience, brand collaborations, and even partnering with August Fest.",
+  },
+  {
+    question: "When did Shoaib Khan start creating content?",
+    answer:
+      "Shoaib Khan started his journey in 2017 with one thought: \"If The Baigan Vines can do such things in Hyderabad content creation, why not me?\" He began creating sketches and short films that quickly went viral. In 2018 he directed his first Telugu short film.",
+  },
+  {
+    question: "Which organisations has Shoaib Khan worked with?",
+    answer:
+      "Hyderabad Hustlers (CEO & Co-Founder), Terminate Hunger (Terminator), EdVenture Park (Campus Lead, Founders' Friday Lead, Founders' Fest Lead) and BioReform (Former Content & Media Creator). He has collaborated with 15+ brands including TEDx MJCET, Startup Hyderabad and The August Fest.",
+  },
+  {
+    question: "What is Shoaib Khan's mission?",
+    answer:
+      "To inspire the youth of Hyderabad to build something of their own and follow their passions fearlessly.",
+  },
+  {
+    question: "How can I contact Shoaib Khan?",
+    answer:
+      "Email shoaib@hyderabadhustlers.com, call or WhatsApp +91 87906 87245, or message @beingashoaib on Instagram. He typically responds within 24 hours.",
+  },
+];
+
 export const developerCredit = {
   prefix: "Designed & Developed by",
   name: "Mohammed Shoaib Choudry",
-  href: "https://shoaibdev.framer.website",
+  href: "https://shoaibchoudry.com",
 };

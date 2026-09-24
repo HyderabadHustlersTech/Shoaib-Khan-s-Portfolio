@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
-import { setLenis } from "@/lib/lenis";
+import { setLenis, getLenis, scrollToSection } from "@/lib/lenis";
 
 /**
  * Lenis smooth scroll wired into the GSAP ticker + ScrollTrigger.
@@ -38,6 +39,24 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
       setLenis(null);
     };
   }, []);
+
+  // Client-side route change: start the new page at the top (or at its #hash),
+  // keeping Lenis' internal position in sync, and re-measure ScrollTriggers.
+  const pathname = usePathname();
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    const hash = window.location.hash;
+    getLenis()?.scrollTo(0, { immediate: true, force: true });
+    const id = window.setTimeout(() => {
+      ScrollTrigger.refresh();
+      if (hash) scrollToSection(hash);
+    }, 120);
+    return () => window.clearTimeout(id);
+  }, [pathname]);
 
   return <>{children}</>;
 }

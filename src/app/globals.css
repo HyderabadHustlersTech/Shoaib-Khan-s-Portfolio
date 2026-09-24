@@ -152,34 +152,6 @@ html.lenis body { height: auto; }
   will-change: transform;
 }
 
-/* Filmstrip sprocket perforations with a travelling gold pulse */
-.perf { position: relative; overflow: hidden; }
-.perf-layer {
-  position: absolute;
-  inset: 0;
-  background-size: 30px 100%;
-  background-position: center;
-}
-.perf-base {
-  background-image: radial-gradient(circle, rgba(254, 189, 89, 0.22) 2.5px, transparent 3px);
-}
-.perf-glow {
-  background-image: radial-gradient(circle, var(--color-gold-bright) 2.5px, transparent 3px);
-  filter: drop-shadow(0 0 4px rgba(254, 189, 89, 0.7));
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 50%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 50%, transparent);
-  -webkit-mask-size: 26% 100%;
-  mask-size: 26% 100%;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-}
-.perf-glow--ltr { animation: perfSweep 4.5s linear infinite; }
-.perf-glow--rtl { animation: perfSweep 4.5s linear infinite reverse; }
-@keyframes perfSweep {
-  from { -webkit-mask-position: -30% 50%; mask-position: -30% 50%; }
-  to   { -webkit-mask-position: 130% 50%; mask-position: 130% 50%; }
-}
-
 /* Reveal primitive — JS toggles [data-reveal="in"] */
 [data-reveal] {
   opacity: 0;
@@ -198,6 +170,47 @@ html.lenis body { height: auto; }
   to   { opacity: 1; transform: none; }
 }
 .intro-word { animation: introWord 0.55s var(--ease-out-expo) both; }
+
+/* CTA sheen — a light sweep across a solid button every few seconds */
+.cta-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.5) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: ctaSheen 3.6s var(--ease-out-quint) infinite;
+}
+@keyframes ctaSheen {
+  0%, 55% { transform: translateX(-120%); }
+  100%    { transform: translateX(120%); }
+}
+
+/* CTA embers — tiny gold sparks drifting off a button's edge (subtle, looping) */
+.cta-ember {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  height: var(--size);
+  margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+  border-radius: 9999px;
+  background: var(--color-gold-bright);
+  box-shadow: 0 0 6px 1px rgba(254, 189, 89, 0.55);
+  opacity: 0;
+  animation: ctaEmber var(--dur) ease-out var(--delay) infinite;
+}
+@keyframes ctaEmber {
+  0%   { opacity: 0; transform: translate(0, 0) scale(1); }
+  15%  { opacity: 0.75; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+}
+
+/* /journey — reel-counter digits (story/Timeline.tsx). --from/--to set the roll direction. */
+.odo-in  { animation: odoIn 0.75s var(--ease-out-expo) both; }
+.odo-out { animation: odoOut 0.75s var(--ease-out-expo) both; }
+@keyframes odoIn  { from { transform: translateY(var(--from, 105%)); } to { transform: none; } }
+@keyframes odoOut { from { transform: none; } to { transform: translateY(var(--to, -105%)); } }
 
 /* Thin gold film-frame ticks */
 .frame-ticks::before,

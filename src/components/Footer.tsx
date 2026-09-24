@@ -1,7 +1,7 @@
 "use client";
 
 import { socials, developerCredit } from "@/lib/content";
-import { scrollToSection } from "@/lib/lenis";
+import { scrollToTop } from "@/lib/lenis";
 import { LinkedIn, Instagram, ArrowDown } from "@/components/ui/Icons";
 
 export default function Footer() {
@@ -10,9 +10,9 @@ export default function Footer() {
       <div className="mx-auto max-w-[1400px] px-5 pb-10 pt-16 sm:px-8 sm:pt-20">
         {/* Giant wordmark */}
         <button
-          onClick={() => scrollToSection("#hero")}
+          onClick={scrollToTop}
           className="group block w-full text-left"
-          aria-label="Back to top"
+          aria-label="Shoaib Khan, back to top"
         >
           <span className="block font-display text-[clamp(3rem,16vw,12rem)] font-extrabold uppercase leading-[0.8] tracking-tighter">
             <span className="text-cream">Shoaib</span>{" "}
@@ -45,8 +45,8 @@ export default function Footer() {
                 <Instagram className="h-5 w-5" />
               </a>
             </div>
-            <p className="font-mono text-xs uppercase tracking-[0.15em] text-cream-faint">
-              © {new Date().getFullYear()} Shoaib Khan — Hyderabad, India
+            <p className="font-mono text-xs uppercase tracking-[0.15em] text-cream">
+              © {new Date().getFullYear()} Shoaib Khan, Hyderabad, India
             </p>
           </div>
 
@@ -66,7 +66,7 @@ export default function Footer() {
           {/* back to top — lowered */}
           <div className="flex justify-center">
             <button
-              onClick={() => scrollToSection("#hero")}
+              onClick={scrollToTop}
               data-cursor-hover
               className="group flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-cream-dim transition-colors hover:text-gold"
             >

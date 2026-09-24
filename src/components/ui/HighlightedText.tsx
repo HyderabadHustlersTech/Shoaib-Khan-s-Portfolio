@@ -1,19 +1,12 @@
 import { Fragment, type ReactNode } from "react";
 import { about } from "@/lib/content";
 
-/**
- * Highlights key phrases in gold without dangerouslySetInnerHTML.
- * Same matching behaviour as the original site (longest-match-first, no overlaps).
- */
-export default function HighlightedText({
-  text,
-  terms = about.highlightTerms as unknown as string[],
-}: {
-  text: string;
-  terms?: string[];
-}) {
+export type Highlight = { start: number; end: number; phrase: string };
+
+/** Longest-match-first, non-overlapping phrase ranges (same behaviour as the original site). */
+export function findHighlights(text: string, terms: readonly string[]): Highlight[] {
   const sorted = [...terms].sort((a, b) => b.length - a.length);
-  const matches: { start: number; end: number; phrase: string }[] = [];
+  const matches: Highlight[] = [];
 
   for (const phrase of sorted) {
     const re = new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
@@ -28,7 +21,18 @@ export default function HighlightedText({
     }
   }
 
-  matches.sort((a, b) => a.start - b.start);
+  return matches.sort((a, b) => a.start - b.start);
+}
+
+/** Highlights key phrases in gold without dangerouslySetInnerHTML. */
+export default function HighlightedText({
+  text,
+  terms = about.highlightTerms,
+}: {
+  text: string;
+  terms?: readonly string[];
+}) {
+  const matches = findHighlights(text, terms);
 
   const parts: ReactNode[] = [];
   let last = 0;

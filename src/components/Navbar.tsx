@@ -1,15 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { navSections, socials } from "@/lib/content";
-import { scrollToSection, getLenis } from "@/lib/lenis";
+import { useEffect, useState, type MouseEvent } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { navItems, socials } from "@/lib/content";
+import { scrollToSection, scrollToTop, getLenis } from "@/lib/lenis";
 import { LinkedIn, Instagram, Menu, Close, ArrowUpRight } from "@/components/ui/Icons";
 import SignatureMark from "@/components/ui/SignatureMark";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [active, setActive] = useState("hero");
+  const [spy, setSpy] = useState("hero");
+  const pathname = usePathname();
+  const onHome = pathname === "/";
+
+  /** The landing-page section an item targets (`/#experience` → "experience"). */
+  const sectionOf = (href: string) => (href.startsWith("/#") ? href.slice(2) : null);
+  const isActive = (href: string) => {
+    const id = sectionOf(href);
+    return id ? onHome && spy === id : pathname === href;
+  };
 
   // Bar tint after leaving the hero
   useEffect(() => {
@@ -19,22 +30,23 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Scroll-spy
+  // Scroll-spy (landing page only)
   useEffect(() => {
-    const ids = ["hero", ...navSections.map((s) => s.id)];
+    if (!onHome) return;
+    const ids = ["hero", ...navItems.flatMap((s) => sectionOf(s.href) ?? [])];
     const els = ids
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => !!el);
 
     const io = new IntersectionObserver(
       (entries) => {
-        for (const e of entries) if (e.isIntersecting) setActive(e.target.id);
+        for (const e of entries) if (e.isIntersecting) setSpy(e.target.id);
       },
       { rootMargin: "-45% 0px -45% 0px", threshold: 0 }
     );
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, []);
+  }, [onHome]);
 
   // Lock scroll while the mobile menu is open
   useEffect(() => {
@@ -50,10 +62,16 @@ export default function Navbar() {
     };
   }, [open]);
 
-  const go = (id: string) => {
+  // Same-page targets scroll smoothly; anything else is a normal route change
+  // (SmoothScroll handles the landing position after it).
+  const go = (e: MouseEvent, href: string) => {
     setOpen(false);
+    const id = sectionOf(href);
+    const samePage = id ? onHome : pathname === href;
+    if (!samePage) return;
+    e.preventDefault();
     // let the menu begin closing before scroll starts
-    setTimeout(() => scrollToSection(`#${id}`), 80);
+    setTimeout(() => (id ? scrollToSection(`#${id}`) : scrollToTop()), 80);
   };
 
   return (
@@ -64,34 +82,37 @@ export default function Navbar() {
         }`}
       >
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-4 sm:px-8 sm:py-5">
-          <button
-            onClick={() => go("hero")}
+          <Link
+            href="/"
+            onClick={(e) => go(e, "/")}
             className="group flex items-center"
-            aria-label="Shoaib Khan — back to top"
+            aria-label="Shoaib Khan, home"
           >
             <SignatureMark className="h-10 transition-opacity duration-300 group-hover:opacity-75 sm:h-12" />
-          </button>
+          </Link>
 
           {/* Desktop nav */}
           <nav className="hidden items-center gap-1 md:flex">
-            {navSections.map((s) => {
-              const isActive = active === s.id;
+            {navItems.map((s) => {
+              const active = isActive(s.href);
               return (
-                <button
-                  key={s.id}
-                  onClick={() => go(s.id)}
+                <Link
+                  key={s.href}
+                  href={s.href}
+                  onClick={(e) => go(e, s.href)}
+                  aria-current={active ? "page" : undefined}
                   className="group relative px-4 py-2 font-mono text-xs uppercase tracking-[0.15em] transition-colors"
                   data-cursor-hover
                 >
-                  <span className={isActive ? "text-gold" : "text-cream/85 group-hover:text-cream"}>
-                    <span className={isActive ? "text-gold/70" : "text-cream/55"}>{s.index}</span> {s.label}
+                  <span className={active ? "text-gold" : "text-cream/85 group-hover:text-cream"}>
+                    <span className={active ? "text-gold/70" : "text-cream/55"}>{s.index}</span> {s.label}
                   </span>
                   <span
                     className={`absolute inset-x-4 bottom-1 h-px origin-left bg-gold transition-transform duration-300 ${
-                      isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                      active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                     }`}
                   />
-                </button>
+                </Link>
               );
             })}
             <a
@@ -122,18 +143,24 @@ export default function Navbar() {
         }`}
       >
         <nav className="flex flex-1 flex-col justify-center gap-2">
-          {navSections.map((s, i) => (
-            <button
-              key={s.id}
-              onClick={() => go(s.id)}
+          {navItems.map((s, i) => (
+            <Link
+              key={s.href}
+              href={s.href}
+              onClick={(e) => go(e, s.href)}
+              aria-current={isActive(s.href) ? "page" : undefined}
               className="group flex items-baseline gap-4 border-b border-line/60 py-4 text-left"
               style={{ transitionDelay: `${open ? i * 60 + 120 : 0}ms` }}
             >
               <span className="font-mono text-xs text-gold">{s.index}</span>
-              <span className="font-display text-5xl font-extrabold tracking-tight text-cream transition-colors group-hover:text-gold">
+              <span
+                className={`font-display text-5xl font-extrabold tracking-tight transition-colors group-hover:text-gold ${
+                  isActive(s.href) ? "text-gold" : "text-cream"
+                }`}
+              >
                 {s.label}
               </span>
-            </button>
+            </Link>
           ))}
         </nav>
 

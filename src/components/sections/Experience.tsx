@@ -9,7 +9,7 @@ export default function Experience() {
       id="experience"
       className="mx-auto max-w-[1400px] scroll-mt-20 px-5 py-24 sm:px-8 sm:py-32"
     >
-      <SectionHeader index="03" label="Credits">
+      <SectionHeader>
         My <span className="text-gold">Experience</span>
       </SectionHeader>
 
@@ -38,9 +38,11 @@ export default function Experience() {
                     aria-hidden
                     loading="lazy"
                     className={`hidden w-auto object-contain opacity-60 transition-opacity duration-300 group-hover:opacity-100 sm:block ${
-                      exp.company === "Hyderabad Hustlers" || exp.company === "EdVenture Park"
-                        ? "h-20 max-w-[14rem] lg:h-24"
-                        : "h-14 max-w-[11rem] lg:h-16"
+                      exp.company === "Hyderabad Hustlers"
+                        ? "h-24 max-w-[16rem] lg:h-28"
+                        : exp.company === "EdVenture Park"
+                          ? "h-20 max-w-[14rem] lg:h-24"
+                          : "h-14 max-w-[11rem] lg:h-16"
                     }`}
                   />
                 )}

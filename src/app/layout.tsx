@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Urbanist } from "next/font/google";
 import "./globals.css";
 import { site } from "@/lib/content";
+import { siteSchema } from "@/lib/schema";
+import JsonLd from "@/components/JsonLd";
 import SmoothScroll from "@/components/providers/SmoothScroll";
 import Grain from "@/components/Grain";
 
@@ -46,68 +48,6 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const personSchema = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "WebSite",
-      "@id": "https://beingashoaib.com/#website",
-      url: "https://beingashoaib.com/",
-      name: "Shoaib Khan",
-      description: site.description,
-      inLanguage: "en-IN",
-      publisher: { "@id": "https://beingashoaib.com/#person" },
-    },
-    {
-      "@type": "Person",
-      "@id": "https://beingashoaib.com/#person",
-      name: "Shoaib Khan",
-      alternateName: "Mohammed Shoaib Choudry",
-      url: "https://beingashoaib.com",
-      image: "https://beingashoaib.com/assets/skpic.webp",
-      jobTitle: ["Content Creator", "Director", "Writer", "Video Editor", "Entrepreneur"],
-      description:
-        "Content Creator, Video Editor, Director & Entrepreneur from Hyderabad. Co-Founder of Hyderabad Hustlers (HH).",
-      email: "shoaib@hyderabadhustlers.com",
-      telephone: "+91-87906-87245",
-      knowsAbout: [
-        "Content Creation",
-        "Video Editing",
-        "Film Direction",
-        "Storytelling",
-        "Entrepreneurship",
-        "Podcasting",
-        "Startups",
-      ],
-      sameAs: [
-        "https://www.instagram.com/beingashoaib",
-        "https://www.linkedin.com/in/shoaibkhan",
-      ],
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: "Hyderabad",
-        addressRegion: "Telangana",
-        addressCountry: "IN",
-      },
-      worksFor: {
-        "@type": "Organization",
-        name: "Hyderabad Hustlers",
-        url: "https://hyderabadhustlers.com",
-      },
-    },
-    {
-      "@type": "ProfilePage",
-      "@id": "https://beingashoaib.com/#profilepage",
-      url: "https://beingashoaib.com/",
-      name: site.title,
-      isPartOf: { "@id": "https://beingashoaib.com/#website" },
-      about: { "@id": "https://beingashoaib.com/#person" },
-      primaryImageOfPage: "https://beingashoaib.com/assets/skpic.webp",
-      inLanguage: "en-IN",
-    },
-  ],
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -115,16 +55,14 @@ export default function RootLayout({
     <html lang="en" className={urbanist.variable}>
       <head>
         <link rel="preconnect" href="https://api.fontshare.com" />
+        <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
           href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,900,700,500,400&display=swap"
         />
       </head>
       <body>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
-        />
+        <JsonLd data={siteSchema} />
         <Grain />
         <SmoothScroll>{children}</SmoothScroll>
       </body>

@@ -1,4 +1,4 @@
-import { impactStats, collaboratedBrands } from "@/lib/content";
+import { impactStats, collaboratedBrands, hhLogo } from "@/lib/content";
 import Reveal from "@/components/Reveal";
 import Marquee from "@/components/ui/Marquee";
 
@@ -6,10 +6,22 @@ export default function ImpactStats() {
   return (
     <div className="mx-auto max-w-[1400px] px-5 pb-8 sm:px-8 sm:pb-10">
       {/* Editorial stat band */}
-      <Reveal className="flex items-baseline gap-3">
-        <span className="font-mono text-xs uppercase tracking-[0.25em] text-gold">Impact</span>
-        <span className="font-mono text-xs uppercase tracking-[0.25em] text-cream-faint">
-          So Far
+      <Reveal className="flex items-center justify-center gap-3 sm:gap-4">
+        <span className="font-mono text-sm font-semibold uppercase tracking-[0.25em] text-gold sm:text-base">
+          Impact
+        </span>
+        <span className="font-mono text-sm font-semibold uppercase tracking-[0.25em] text-cream-dim sm:text-base">
+          Through
+        </span>
+        {/* hhlogo.webp is a padded square; crop to the mark's own 1083×620 box */}
+        <span className="relative inline-block aspect-[1083/620] h-9 overflow-hidden sm:h-11">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={hhLogo}
+            alt="Hyderabad Hustlers"
+            loading="lazy"
+            className="absolute left-1/2 top-1/2 h-[252%] w-auto max-w-none -translate-x-1/2 -translate-y-1/2"
+          />
         </span>
       </Reveal>
 

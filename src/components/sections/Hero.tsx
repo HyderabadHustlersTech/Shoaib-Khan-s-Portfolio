@@ -1,11 +1,31 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, type CSSProperties } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "@/lib/gsap";
-import { hero, socials } from "@/lib/content";
-import Marquee from "@/components/ui/Marquee";
+import Link from "next/link";
+import { hero, socials, journeyPage } from "@/lib/content";
 import { LinkedIn, Instagram } from "@/components/ui/Icons";
+
+/**
+ * Ember particles for the "Explore My Journey" pill: each starts on the pill's
+ * outline and drifts outward (slightly upward) while fading — see .cta-ember.
+ * Deterministic (no Math.random) so server and client markup match.
+ */
+const EMBERS = Array.from({ length: 11 }, (_, i) => {
+  const a = (i / 11) * Math.PI * 2 + 0.35;
+  const dist = 18 + (i % 3) * 8;
+  const r = (n: number) => Math.round(n * 10) / 10;
+  return {
+    "--x": `${r(50 + 48 * Math.cos(a))}%`,
+    "--y": `${r(50 + 44 * Math.sin(a))}%`,
+    "--dx": `${r(Math.cos(a) * dist)}px`,
+    "--dy": `${r(Math.sin(a) * dist * 0.7 - 10)}px`,
+    "--size": `${2 + (i % 3) * 0.75}px`,
+    "--dur": `${3.2 + (i % 4) * 0.6}s`,
+    "--delay": `${r((i * 0.73) % 3.6)}s`,
+  } as CSSProperties;
+});
 
 export default function Hero() {
   const scope = useRef<HTMLElement>(null);
@@ -82,7 +102,7 @@ export default function Hero() {
                 <span className="line-inner block text-[clamp(3.5rem,17vw,12rem)] uppercase text-cream">
                   Shoaib
                 </span>
-              </span>
+              </span>{" "}
               <span className="block overflow-hidden">
                 <span className="line-inner block text-[clamp(3.5rem,17vw,12rem)] uppercase text-gold">
                   Khan
@@ -90,39 +110,63 @@ export default function Hero() {
               </span>
             </h1>
 
-            <p className="hero-fade mx-auto mt-6 max-w-xl text-base leading-relaxed text-cream-dim lg:mx-0 sm:text-lg">
-              Content Creator, Director, Writer, Video Editor, and Co-Founder of{" "}
-              <span className="font-semibold italic text-gold">Hyderabad Hustlers</span>
+            <p className="hero-fade mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 font-display text-lg font-bold uppercase tracking-tight text-cream sm:text-2xl lg:justify-start">
+              {hero.roles.map((r, i) => (
+                <span key={r} className="flex items-center gap-4">
+                  {i > 0 && (
+                    <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-gold sm:h-2.5 sm:w-2.5" />
+                  )}
+                  {r}
+                </span>
+              ))}
             </p>
 
-            {/* Let's Connect */}
-            <div className="hero-fade mt-8 inline-flex items-center gap-4 rounded-full border border-gold/50 bg-ink/40 px-6 py-3 backdrop-blur-sm">
-              <span className="font-body text-sm font-semibold text-cream sm:text-base">
-                {hero.connectLabel}
-              </span>
-              <span className="h-5 w-px bg-line" />
-              <div className="flex items-center gap-2">
-                <a
-                  href={socials.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Connect with Shoaib Khan on LinkedIn"
-                  data-cursor-hover
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-gold/40 text-gold transition-colors hover:bg-gold hover:text-ink"
-                >
-                  <LinkedIn className="h-[18px] w-[18px]" />
-                </a>
-                <a
-                  href={socials.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Follow Shoaib Khan on Instagram"
-                  data-cursor-hover
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-gold/40 text-gold transition-colors hover:bg-gold hover:text-ink"
-                >
-                  <Instagram className="h-[18px] w-[18px]" />
-                </a>
+            {/* Let's Connect + Explore My Journey */}
+            <div className="hero-fade mt-8 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
+              <div className="inline-flex items-center gap-4 rounded-full border border-gold/50 bg-ink/40 px-6 py-3 backdrop-blur-sm">
+                <span className="font-body text-sm font-semibold text-cream sm:text-base">
+                  {hero.connectLabel}
+                </span>
+                <span className="h-5 w-px bg-line" />
+                <div className="flex items-center gap-2">
+                  <a
+                    href={socials.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Connect with Shoaib Khan on LinkedIn"
+                    data-cursor-hover
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-gold/40 text-gold transition-colors hover:bg-gold hover:text-ink"
+                  >
+                    <LinkedIn className="h-[18px] w-[18px]" />
+                  </a>
+                  <a
+                    href={socials.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Follow Shoaib Khan on Instagram"
+                    data-cursor-hover
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-gold/40 text-gold transition-colors hover:bg-gold hover:text-ink"
+                  >
+                    <Instagram className="h-[18px] w-[18px]" />
+                  </a>
+                </div>
               </div>
+              {/* Explore My Journey — the landing page's door to /journey */}
+              <Link
+                href={journeyPage.path}
+                data-cursor-hover
+                className="group relative inline-flex transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5"
+              >
+                {/* embers drifting off the pill's edge */}
+                <span aria-hidden className="pointer-events-none absolute inset-0">
+                  {EMBERS.map((e, i) => (
+                    <span key={i} className="cta-ember" style={e} />
+                  ))}
+                </span>
+                <span className="cta-sheen relative flex h-16 items-center overflow-hidden rounded-full bg-gold px-8 font-body text-sm font-bold text-ink shadow-[0_0_40px_-10px_rgba(254,189,89,0.6)] transition-shadow duration-300 group-hover:shadow-[0_0_60px_-6px_rgba(254,189,89,0.85)] sm:text-base">
+                  {hero.journeyLabel}
+                </span>
+              </Link>
             </div>
           </div>
 
@@ -137,27 +181,9 @@ export default function Hero() {
                 className="hero-portrait-img h-full w-full object-cover"
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-transparent" />
-              <span className="absolute bottom-3 left-4 font-mono text-[0.6rem] uppercase tracking-[0.2em] text-cream/80">
-                SK — 001
-              </span>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Roles marquee */}
-      <div className="hero-fade border-y border-line py-4">
-        <Marquee duration={22} className="text-cream">
-          {[...hero.roles, ...hero.roles, ...hero.roles].map((r, i) => (
-            <span
-              key={`${r}-${i}`}
-              className="flex items-center gap-6 pr-6 font-display text-lg font-bold uppercase tracking-tight sm:text-2xl"
-            >
-              {r}
-              <span className="inline-block h-2 w-2 rounded-full bg-gold sm:h-2.5 sm:w-2.5" />
-            </span>
-          ))}
-        </Marquee>
       </div>
     </section>
   );
